@@ -2,6 +2,9 @@ apiVersion: source.toolkit.fluxcd.io/v1
 kind: HelmRepository
 metadata:
   name: istio
+  namespace: istio-system
 spec:
   interval: 24h
-  url: https://istio-release.storage.googleapis.com
+  url: https://istio-release.storage.googleapis.com/charts
+  values:
+    installCRDs: true

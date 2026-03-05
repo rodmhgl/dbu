@@ -7,7 +7,7 @@ spec:
   chart:
     spec:
       chart: istio
-      version: "66.2.2"
+      version: "1.24.0"
       sourceRef:
         kind: HelmRepository
         name: istio
