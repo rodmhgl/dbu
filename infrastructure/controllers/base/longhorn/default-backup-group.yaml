@@ -1,0 +1,10 @@
+apiVersion: longhorn.io/v1beta2
+kind: BackupTarget
+metadata:
+  finalizers:
+    - longhorn.io
+  name: default
+spec:
+  backupTargetURL: azblob://backups@core.windows.net/
+  credentialSecret: longhorn-azblob-secret
+  pollInterval: 5m0s

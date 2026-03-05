@@ -1,0 +1,55 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  labels:
+    longhorn.io/managed-by: longhorn-manager
+    recurring-job.longhorn.io: daily-backup
+  name: daily-backup
+spec:
+  concurrencyPolicy: Forbid
+  failedJobsHistoryLimit: 1
+  jobTemplate:
+    spec:
+      backoffLimit: 3
+      template:
+        metadata:
+          labels:
+            longhorn.io/managed-by: longhorn-manager
+            recurring-job.longhorn.io: daily-backup
+          name: daily-backup
+        spec:
+          containers:
+            - command:
+                - longhorn-manager
+                - -d
+                - recurring-job
+                - daily-backup
+                - --manager-url
+                - http://longhorn-backend:9500/v1
+              env:
+                - name: POD_NAMESPACE
+                  valueFrom:
+                    fieldRef:
+                      apiVersion: v1
+                      fieldPath: metadata.namespace
+              image: longhornio/longhorn-manager:v1.10.1
+              imagePullPolicy: IfNotPresent
+              name: daily-backup
+              volumeMounts:
+                - mountPath: /var/lib/longhorn/engine-binaries/
+                  name: engine-binaries
+          dnsPolicy: ClusterFirst
+          priorityClassName: longhorn-critical
+          restartPolicy: OnFailure
+          schedulerName: default-scheduler
+          serviceAccount: longhorn-service-account
+          serviceAccountName: longhorn-service-account
+          terminationGracePeriodSeconds: 30
+          volumes:
+            - hostPath:
+                path: /var/lib/longhorn/engine-binaries/
+                type: ""
+              name: engine-binaries
+  schedule: 0 9 * * *
+  successfulJobsHistoryLimit: 1
+  suspend: false
