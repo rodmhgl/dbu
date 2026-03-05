@@ -1,0 +1,29 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - clusterrole-gatekeeper-manager-role.yaml
+  - clusterrolebinding-gatekeeper-manager-rolebinding.yaml
+  - crd-assign.mutations.gatekeeper.sh.yaml
+  - crd-assignimage.mutations.gatekeeper.sh.yaml
+  - crd-assignmetadata.mutations.gatekeeper.sh.yaml
+  - crd-configs.config.gatekeeper.sh.yaml
+  - crd-constraintpodstatuses.status.gatekeeper.sh.yaml
+  - crd-constrainttemplatepodstatuses.status.gatekeeper.sh.yaml
+  - crd-constrainttemplates.templates.gatekeeper.sh.yaml
+  - crd-expansiontemplate.expansion.gatekeeper.sh.yaml
+  - crd-expansiontemplatepodstatuses.status.gatekeeper.sh.yaml
+  - crd-modifyset.mutations.gatekeeper.sh.yaml
+  - crd-mutatorpodstatuses.status.gatekeeper.sh.yaml
+  - crd-providers.externaldata.gatekeeper.sh.yaml
+  - deployment-gatekeeper-audit.yaml
+  - deployment-gatekeeper-controller-manager.yaml
+  - mutatingwebhookconfiguration-gatekeeper-mutating-webhook-configuration.yaml
+  - namespace-gatekeeper-system.yaml
+  - poddisruptionbudget-gatekeeper-controller-manager.yaml
+  - resourcequota-gatekeeper-critical-pods.yaml
+  - role-gatekeeper-manager-role.yaml
+  - rolebinding-gatekeeper-manager-rolebinding.yaml
+  - secret-gatekeeper-webhook-server-cert.yaml
+  - service-gatekeeper-webhook-service.yaml
+  - serviceaccount-gatekeeper-admin.yaml
+  - validatingwebhookconfiguration-gatekeeper-validating-webhook-configuration.yaml
