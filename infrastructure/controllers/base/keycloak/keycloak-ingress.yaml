@@ -1,0 +1,18 @@
+kind: Ingress
+apiVersion: networking.k8s.io/v1
+metadata:
+  name: keycloak-ingress
+  namespace: keycloak
+spec:
+  ingressClassName: traefik
+  rules:
+  - host: rod-foundation-demo.coder
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: keycloak-service
+            port:
+              number: 8080

@@ -1,0 +1,29 @@
+kind: Middleware
+apiVersion: traefik.io/v1alpha1
+metadata:
+  name: cors
+  namespace: keycloak
+spec:
+  headers:
+    customRequestHeaders:
+      Access-Control-Allow-Origin: "*"
+      Access-Control-Allow-Methods: "GET,POST,PUT,DELETE,OPTIONS,HEAD,PATCH"
+      Access-Control-Allow-Headers: "*"
+      Access-Control-Allow-Credentials: "true"
+      Access-Control-Max-Age: "3600"
+    customResponseHeaders:
+      Access-Control-Allow-Origin: "*"
+      Access-Control-Allow-Methods: "GET,POST,PUT,DELETE,OPTIONS,HEAD,PATCH"
+      Access-Control-Allow-Headers: "*"
+      Access-Control-Allow-Credentials: "true"
+      Access-Control-Max-Age: "3600"
+    accessControlAllowMethods:
+      - "*"
+    accessControlAllowOriginListRegex:
+      - ".*"
+    accessControlAllowHeaders:
+      - "*"
+    accessControlExposeHeaders:
+      - "*"
+    accessControlAllowCredentials: true
+    accessControlMaxAge: 3600

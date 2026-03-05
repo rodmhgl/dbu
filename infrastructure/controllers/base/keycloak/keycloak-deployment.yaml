@@ -1,0 +1,94 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: keycloak
+  namespace: keycloak
+  labels:
+    app: keycloak
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: keycloak
+  template:
+    metadata:
+      labels:
+        app: keycloak
+    spec:
+      containers:
+      - name: keycloak
+        image: quay.io/keycloak/keycloak:22.0
+        args:
+        - "start-dev"
+        - "--import-realm"
+        - "--spi-login-protocol-openid-connect-cors-enabled=true"
+        - "--spi-login-protocol-openid-connect-cors-allowed-origins=*"
+        - "--spi-login-protocol-openid-connect-cors-allowed-methods=GET,POST,OPTIONS,PUT,DELETE"
+        - "--spi-login-protocol-openid-connect-cors-allowed-headers=*"
+        env:
+        - name: KEYCLOAK_ADMIN
+          value: admin
+        - name: KEYCLOAK_ADMIN_PASSWORD
+          value: admin
+        - name: KC_DB
+          value: postgres
+        - name: KC_DB_URL
+          value: jdbc:postgresql://keycloak-postgres-service:5432/keycloak
+        - name: KC_DB_USERNAME
+          value: keycloak
+        - name: KC_DB_PASSWORD
+          value: keycloak
+        - name: KC_HOSTNAME
+          value: rod-foundation-demo.coder:8082
+        - name: KC_HOSTNAME_STRICT
+          value: "false"
+        - name: KC_HTTP_ENABLED
+          value: "true"
+        - name: KC_HOSTNAME_STRICT_HTTPS
+          value: "false"
+        - name: KC_PROXY
+          value: "edge"
+        # Global CORS configuration
+        - name: KC_HTTP_CORS_ENABLED
+          value: "true"
+        - name: KC_HTTP_CORS_ORIGINS
+          value: "http://teams-ui.127.0.0.1.sslip.io,http://localhost:4200,*"
+        - name: KC_HTTP_CORS_METHODS
+          value: "GET,POST,PUT,DELETE,OPTIONS,HEAD"
+        - name: KC_HTTP_CORS_HEADERS
+          value: "*"
+        - name: KC_HTTP_CORS_EXPOSED_HEADERS
+          value: "*"
+        - name: KC_HTTP_CORS_MAX_AGE
+          value: "3600"
+        - name: KC_HTTP_CORS_ALLOW_CREDENTIALS
+          value: "true"
+        ports:
+        - containerPort: 8080
+        readinessProbe:
+          httpGet:
+            path: /realms/master
+            port: 8080
+          initialDelaySeconds: 30
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /realms/master
+            port: 8080
+          initialDelaySeconds: 60
+          periodSeconds: 30
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "500m"
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"
+        volumeMounts:
+        - name: keycloak-realm
+          mountPath: /opt/keycloak/data/import
+          readOnly: true
+      volumes:
+      - name: keycloak-realm
+        configMap:
+          name: keycloak-realm-config

@@ -1,0 +1,90 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: keycloak-realm-config
+  namespace: keycloak
+data:
+  teams-realm.json: |
+    {
+      "realm": "teams",
+      "enabled": true,
+      "sslRequired": "none",
+      "registrationAllowed": false,
+      "resetPasswordAllowed": true,
+      "editUsernameAllowed": false,
+      "bruteForceProtected": true,
+      "clients": [
+        {
+          "clientId": "teams-ui",
+          "name": "Teams UI",
+          "description": "Angular Teams Management UI",
+          "enabled": true,
+          "clientAuthenticatorType": "client-secret",
+          "redirectUris": [
+            "http://platform-auth.127.0.0.1.sslip.io/*",
+            "http://engineering-platform.local/*",
+            "http://localhost:4200/*",
+            "http://rod-foundation-demo.coder/*",
+            "http://rod-foundation-demo.coder:8081/*"
+          ],
+          "webOrigins": [
+            "http://platform-auth.127.0.0.1.sslip.io",
+            "http://engineering-platform.local",
+            "http://localhost:4200",
+            "http://rod-foundation-demo.coder:8081",
+            "http://rod-foundation-demo.coder:8082"
+          ],
+          "publicClient": true,
+          "protocol": "openid-connect",
+          "attributes": {
+            "post.logout.redirect.uris": "http://platform-auth.127.0.0.1.sslip.io/*##http://localhost:4200/*##http://rod-foundation-demo.coder:8081/*##http://rod-foundation-demo.coder:*"
+          }
+        }
+      ],
+      "users": [
+        {
+          "username": "teamlead1",
+          "enabled": true,
+          "firstName": "Team",
+          "lastName": "Lead",
+          "email": "teamlead1@company.com",
+          "emailVerified": true,
+          "credentials": [
+            {
+              "type": "password",
+              "value": "password123",
+              "temporary": false
+            }
+          ],
+          "realmRoles": ["team-leader"]
+        },
+        {
+          "username": "admin",
+          "enabled": true,
+          "firstName": "Admin",
+          "lastName": "User",
+          "email": "admin@company.com",
+          "emailVerified": true,
+          "credentials": [
+            {
+              "type": "password",
+              "value": "admin123",
+              "temporary": false
+            }
+          ],
+          "realmRoles": ["admin", "team-leader"]
+        }
+      ],
+      "roles": {
+        "realm": [
+          {
+            "name": "team-leader",
+            "description": "Can create and manage teams"
+          },
+          {
+            "name": "admin",
+            "description": "Full administrative access"
+          }
+        ]
+      }
+    }
