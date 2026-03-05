@@ -1,0 +1,53 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: kube-prometheus-stack
+spec:
+  interval: 30m
+  chart:
+    spec:
+      chart: kube-prometheus-stack
+      version: "66.2.2"
+      sourceRef:
+        kind: HelmRepository
+        name: kube-prometheus-stack
+      interval: 12h
+  install:
+    crds: Create
+  upgrade:
+    crds: CreateReplace
+  driftDetection:
+    mode: enabled
+    ignore:
+      # Ignore "validated" annotation which is not inserted during install
+      - paths: ["/metadata/annotations/prometheus-operator-validated"]
+        target:
+          kind: PrometheusRule
+  values:
+    grafana:
+      adminPassword: null
+      admin:
+        existingSecret: grafana-admin-credentials
+        passwordKey: admin-secret
+      ingress:
+        enabled: true
+        annotations: {}
+        labels:
+          app: grafana
+        hosts:
+          - monitoring.kube-playground.io
+        tls:
+          - secretName: star.kube-playground.io
+            hosts:
+              - monitoring.kube-playground.io
+      persistence:
+        enabled: true
+        type: sts
+        storageClassName: longhorn
+        accessModes:
+          - ReadWriteOnce
+        size: 10Gi
+        annotations:
+          recurring-job-group.longhorn.io/default: enabled
+        finalizers:
+          - kubernetes.io/pvc-protection
