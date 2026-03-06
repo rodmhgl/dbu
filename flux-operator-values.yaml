@@ -1,0 +1,13 @@
+web:
+  ingress:
+    enabled: true
+    className: traefik
+    hosts:
+      - host: flux.kube-playground.io
+        paths:
+          - path: /
+            pathType: Prefix
+    tls:
+      - hosts:
+          - flux.kube-playground.io
+        secretName: star.kube-playground.io

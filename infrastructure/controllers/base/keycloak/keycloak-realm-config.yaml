@@ -1,89 +1,23 @@
 apiVersion: v1
 kind: Secret
 metadata:
-  name: keycloak-realm-config
-  namespace: keycloak
+    name: keycloak-realm-config
+    namespace: keycloak
 type: Opaque
-# TODO: Encrypt with SOPS before committing production values
-# sops --encrypt --age <age-public-key> --encrypted-regex '^(data|stringData)$' --in-place keycloak-realm-config.yaml
 stringData:
-  teams-realm.json: |
-    {
-      "realm": "teams",
-      "enabled": true,
-      "sslRequired": "none",
-      "registrationAllowed": false,
-      "resetPasswordAllowed": true,
-      "editUsernameAllowed": false,
-      "bruteForceProtected": true,
-      "clients": [
-        {
-          "clientId": "teams-ui",
-          "name": "Teams UI",
-          "description": "Angular Teams Management UI",
-          "enabled": true,
-          "clientAuthenticatorType": "client-secret",
-          "redirectUris": [
-            "http://localhost:4200/*",
-            "https://kc.kube-playground.io/*",
-            "https://teams-ui.kube-playground.io/*"
-          ],
-          "webOrigins": [
-            "http://localhost:4200",
-            "https://kc.kube-playground.io",
-            "https://teams-ui.kube-playground.io"
-          ],
-          "publicClient": true,
-          "protocol": "openid-connect",
-          "attributes": {
-            "post.logout.redirect.uris": "http://localhost:4200/*##https://kc.kube-playground.io/*##https://teams-ui.kube-playground.io/*"
-          }
-        }
-      ],
-      "users": [
-        {
-          "username": "teamlead1",
-          "enabled": true,
-          "firstName": "Team",
-          "lastName": "Lead",
-          "email": "teamlead1@company.com",
-          "emailVerified": true,
-          "credentials": [
-            {
-              "type": "password",
-              "value": "password123",
-              "temporary": false
-            }
-          ],
-          "realmRoles": ["team-leader"]
-        },
-        {
-          "username": "admin",
-          "enabled": true,
-          "firstName": "Admin",
-          "lastName": "User",
-          "email": "admin@company.com",
-          "emailVerified": true,
-          "credentials": [
-            {
-              "type": "password",
-              "value": "admin123",
-              "temporary": false
-            }
-          ],
-          "realmRoles": ["admin", "team-leader"]
-        }
-      ],
-      "roles": {
-        "realm": [
-          {
-            "name": "team-leader",
-            "description": "Can create and manage teams"
-          },
-          {
-            "name": "admin",
-            "description": "Full administrative access"
-          }
-        ]
-      }
-    }
+    teams-realm.json: ENC[AES256_GCM,data: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,iv:Luh+KL/9cJ6urXXbRvINp5NxaZ+KOZPYSxbaFLIBmDg=,tag:C4plCXDY2ZwjvpKMvyJAHQ==,type:str]
+sops:
+    age:
+        - recipient: age1wqmrjqvd55mqqesrq04ehf3rxnj7l6fvlz4en54mypkjq6urm39qv7lkep
+          enc: |
+            -----BEGIN AGE ENCRYPTED FILE-----
+            YWdlLWVuY3J5cHRpb24ub3JnL3YxCi0+IFgyNTUxOSA2eGpPVlVLMkRnRElXTjY5
+            M1pMS0VwaDVHdFZvYmtPZDZxMXhCeXRzSzFjCmdnMkk0aVZ5Z0g3d0krK0YvSEZv
+            R0ZtcWorTTNnVlNrQm5EdzYwQ2VtR2cKLS0tIHJwZkN5b3pxVDlUSGpURVpHTmR1
+            Q1F4a0tEUTdwQUVCTFZqb3ZndFBuVHcK5kOjaBVT3Fk8vSXuvbUTLg1OCXSVlxqy
+            QgL4KAcSrEL8p6GH92nJm0xMzyD4G15DtTM76O8PorMEExOEZXpm7g==
+            -----END AGE ENCRYPTED FILE-----
+    lastmodified: "2026-03-06T19:37:28Z"
+    mac: ENC[AES256_GCM,data:Qbzx2RdzxINJOYpdfwFBCxiWNEXe62utfB2boIUIiiNWx8yUIIO8uzXgKu9LIWr9HhM4u4gEAj6Qk/zRnkPigRBqzXRMGqtZN4eY8mA4m/dhFOAmONHQB/hvYzVGPpiz9DkIJhedBTUhruk/x/bh3+4vL5Mknw6HTYarQ+LfOQc=,iv:mKn19btklkU373olTqlPLpJW1hx8bEwPtajG2LQ0aYc=,tag:R/1pVyIil9/U7AUAsoeEOg==,type:str]
+    encrypted_regex: ^(data|stringData)$
+    version: 3.11.0
