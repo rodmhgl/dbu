@@ -19,7 +19,7 @@ spec:
       - name: keycloak
         image: quay.io/keycloak/keycloak:22.0
         args:
-        - "start-dev"
+        - "start"
         - "--import-realm"
         - "--spi-login-protocol-openid-connect-cors-enabled=true"
         - "--spi-login-protocol-openid-connect-cors-allowed-origins=*"
