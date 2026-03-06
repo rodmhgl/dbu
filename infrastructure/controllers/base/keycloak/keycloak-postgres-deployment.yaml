@@ -16,6 +16,7 @@ spec:
         app: keycloak-postgres
     spec:
       securityContext:
+        fsGroup: 70
         runAsNonRoot: true
         seccompProfile:
           type: RuntimeDefault
