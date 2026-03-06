@@ -27,17 +27,29 @@ spec:
         - "--spi-login-protocol-openid-connect-cors-allowed-headers=*"
         env:
         - name: KEYCLOAK_ADMIN
-          value: admin
+          valueFrom:
+            secretKeyRef:
+              key: KEYCLOAK_ADMIN
+              name: keycloak-credentials
         - name: KEYCLOAK_ADMIN_PASSWORD
-          value: admin
+          valueFrom:
+            secretKeyRef:
+              key: KEYCLOAK_ADMIN_PASSWORD
+              name: keycloak-credentials
         - name: KC_DB
           value: postgres
         - name: KC_DB_URL
           value: jdbc:postgresql://keycloak-postgres-service:5432/keycloak
         - name: KC_DB_USERNAME
-          value: keycloak
+          valueFrom:
+            secretKeyRef:
+              key: KC_DB_USERNAME
+              name: keycloak-credentials
         - name: KC_DB_PASSWORD
-          value: keycloak
+          valueFrom:
+            secretKeyRef:
+              key: KC_DB_PASSWORD
+              name: keycloak-credentials
         - name: KC_HOSTNAME
           value: rod-foundation-demo.coder:8082
         - name: KC_HOSTNAME_STRICT
@@ -90,5 +102,5 @@ spec:
           readOnly: true
       volumes:
       - name: keycloak-realm
-        configMap:
-          name: keycloak-realm-config
+        secret:
+          secretName: keycloak-realm-config

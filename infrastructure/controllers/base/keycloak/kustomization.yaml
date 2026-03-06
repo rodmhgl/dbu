@@ -5,7 +5,9 @@ resources:
   - keycloak-deployment.yaml
   - keycloak-ingress.yaml
   - keycloak-postgres-deployment.yaml
+  - keycloak-postgres-secrets.yaml
   - keycloak-postgres-service.yaml
   - keycloak-realm-config.yaml
+  - keycloak-secrets.yaml
   - keycloak-service.yaml
   - namespace.yaml

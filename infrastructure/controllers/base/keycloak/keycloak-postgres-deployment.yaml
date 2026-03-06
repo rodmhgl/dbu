@@ -20,11 +20,20 @@ spec:
         image: postgres:15-alpine
         env:
         - name: POSTGRES_DB
-          value: keycloak
-        - name: POSTGRES_USER
-          value: keycloak
+          valueFrom:
+            secretKeyRef:
+              key: POSTGRES_DB
+              name: keycloak-postgres-credentials
         - name: POSTGRES_PASSWORD
-          value: keycloak
+          valueFrom:
+            secretKeyRef:
+              key: POSTGRES_PASSWORD
+              name: keycloak-postgres-credentials
+        - name: POSTGRES_USER
+          valueFrom:
+            secretKeyRef:
+              key: POSTGRES_USER
+              name: keycloak-postgres-credentials
         - name: PGDATA
           value: /var/lib/postgresql/data/pgdata
         ports:
