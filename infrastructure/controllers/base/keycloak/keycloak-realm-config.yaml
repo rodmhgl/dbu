@@ -28,19 +28,21 @@ stringData:
             "http://engineering-platform.local/*",
             "http://localhost:4200/*",
             "http://rod-foundation-demo.coder/*",
-            "http://rod-foundation-demo.coder:8081/*"
+            "http://rod-foundation-demo.coder:8081/*",
+            "https://kc.kube-playground.io/*"
           ],
           "webOrigins": [
             "http://platform-auth.127.0.0.1.sslip.io",
             "http://engineering-platform.local",
             "http://localhost:4200",
             "http://rod-foundation-demo.coder:8081",
-            "http://rod-foundation-demo.coder:8082"
+            "http://rod-foundation-demo.coder:8082",
+            "https://kc.kube-playground.io"
           ],
           "publicClient": true,
           "protocol": "openid-connect",
           "attributes": {
-            "post.logout.redirect.uris": "http://platform-auth.127.0.0.1.sslip.io/*##http://localhost:4200/*##http://rod-foundation-demo.coder:8081/*##http://rod-foundation-demo.coder:*"
+            "post.logout.redirect.uris": "http://platform-auth.127.0.0.1.sslip.io/*##http://localhost:4200/*##http://rod-foundation-demo.coder:8081/*##http://rod-foundation-demo.coder:*##https://kc.kube-playground.io/*"
           }
         }
       ],

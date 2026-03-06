@@ -12,3 +12,4 @@ resources:
   - keycloak-secrets.yaml
   - keycloak-service.yaml
   - namespace.yaml
+  - wildcard_crt.yaml

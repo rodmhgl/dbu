@@ -26,6 +26,7 @@ spec:
       - http://localhost:4200
       - http://rod-foundation-demo.coder:8081
       - http://rod-foundation-demo.coder:8082
+      - https://kc.kube-playground.io
     accessControlExposeHeaders:
       - Location
     accessControlMaxAge: 3600
