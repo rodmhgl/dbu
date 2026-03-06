@@ -35,6 +35,13 @@ spec:
               image: longhornio/longhorn-manager:v1.10.1
               imagePullPolicy: IfNotPresent
               name: daily-backup
+              resources:
+                limits:
+                  cpu: "200m"
+                  memory: "256Mi"
+                requests:
+                  cpu: "10m"
+                  memory: "64Mi"
               volumeMounts:
                 - mountPath: /var/lib/longhorn/engine-binaries/
                   name: engine-binaries
