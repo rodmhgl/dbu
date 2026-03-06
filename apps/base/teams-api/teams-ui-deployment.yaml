@@ -22,7 +22,7 @@ spec:
     spec:
       containers:
       - name: teams-ui
-        image: olivercodes01/teams-app:0.0.7
+        image: ghcr.io/rodmhgl/teams-ui:1.1.1
         ports:
         - containerPort: 80
         env:
