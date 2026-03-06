@@ -10,6 +10,8 @@ spec:
   selector:
     matchLabels:
       app: keycloak
+  strategy:
+    type: Recreate
   template:
     metadata:
       labels:
