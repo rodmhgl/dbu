@@ -15,9 +15,21 @@ spec:
       labels:
         app: keycloak
     spec:
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
       containers:
       - name: keycloak
         image: quay.io/keycloak/keycloak:22.0
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
+          readOnlyRootFilesystem: false
+          runAsNonRoot: true
+          runAsUser: 1000
         args:
         - "start"
         - "--import-realm"

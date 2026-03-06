@@ -15,9 +15,21 @@ spec:
       labels:
         app: keycloak-postgres
     spec:
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
       containers:
       - name: postgres
         image: postgres:15-alpine
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+              - ALL
+          readOnlyRootFilesystem: false
+          runAsNonRoot: true
+          runAsUser: 70
         env:
         - name: POSTGRES_DB
           valueFrom:
