@@ -62,13 +62,11 @@ spec:
             secretKeyRef:
               key: KC_DB_PASSWORD
               name: keycloak-credentials
-        - name: KC_HOSTNAME
-          value: kc.kube-playground.io
-        - name: KC_HOSTNAME_STRICT
-          value: "true"
+        - name: KC_HOSTNAME_URL
+          value: "https://kc.kube-playground.io"
+        - name: KC_HOSTNAME_ADMIN_URL
+          value: "https://kc.kube-playground.io"
         - name: KC_HTTP_ENABLED
-          value: "true"
-        - name: KC_HOSTNAME_STRICT_HTTPS
           value: "true"
         - name: KC_PROXY
           value: "edge"
