@@ -28,7 +28,7 @@ spec:
     ingress:
       enabled: true
       ingressClassName: traefik
-      host: longhorn_dbu.kube-playground.io
+      host: longhorn-dbu.kube-playground.io
       tls: true
       tlsSecret: star.kube-playground.io
       path: /
