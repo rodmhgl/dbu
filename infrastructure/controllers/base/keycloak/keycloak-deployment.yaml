@@ -72,6 +72,8 @@ spec:
           value: "edge"
         - name: KC_PROXY_HEADERS
           value: "xforwarded"
+        - name: KC_SPI_IMPORT_REALM_OVERWRITE_EXISTING
+          value: "true"
         # Global CORS configuration
         - name: KC_HTTP_CORS_ENABLED
           value: "true"
