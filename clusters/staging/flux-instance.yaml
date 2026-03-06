@@ -1,0 +1,36 @@
+apiVersion: fluxcd.controlplane.io/v1
+kind: FluxInstance
+metadata:
+  name: flux
+  namespace: flux-system
+spec:
+  cluster:
+    domain: "cluster.local"
+    multitenant: false
+    networkPolicy: true
+    type: kubernetes
+  components:
+    - source-controller
+    - kustomize-controller
+    - helm-controller
+    - notification-controller
+  distribution:
+    registry: "ghcr.io/fluxcd"
+    version: "2.7.x"
+  kustomize:
+    patches:
+      - patch: |
+          - op: add
+            path: /spec/decryption
+            value:
+              provider: sops
+              secretRef:
+                name: sops-age
+        target:
+          kind: Kustomization
+  sync:
+    kind: GitRepository
+    path: "clusters/staging"
+    pullSecret: "flux-system"
+    ref: "refs/heads/main"
+    url: "ssh://git@github.com/rodmhgl/dbu"
