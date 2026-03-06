@@ -21,7 +21,7 @@ spec:
           type: RuntimeDefault
       containers:
       - name: keycloak
-        image: quay.io/keycloak/keycloak:22.0
+        image: quay.io/keycloak/keycloak:22.0.5
         securityContext:
           allowPrivilegeEscalation: false
           capabilities:
