@@ -14,6 +14,8 @@ spec:
   selector:
     matchLabels:
       app: teams-ui
+  strategy:
+    type: Recreate
   template:
     metadata:
       labels:
