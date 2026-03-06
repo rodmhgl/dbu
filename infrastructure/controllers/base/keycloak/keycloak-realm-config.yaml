@@ -26,7 +26,7 @@ stringData:
           "redirectUris": [
             "http://localhost:4200/*",
             "https://kc.kube-playground.io/*",
-            "https://teams-ui.kube-playground.io"
+            "https://teams-ui.kube-playground.io/*"
           ],
           "webOrigins": [
             "http://localhost:4200",
@@ -36,7 +36,7 @@ stringData:
           "publicClient": true,
           "protocol": "openid-connect",
           "attributes": {
-            "post.logout.redirect.uris": "http://localhost:4200/*##https://kc.kube-playground.io/*"
+            "post.logout.redirect.uris": "http://localhost:4200/*##https://kc.kube-playground.io/*##https://teams-ui.kube-playground.io/*"
           }
         }
       ],

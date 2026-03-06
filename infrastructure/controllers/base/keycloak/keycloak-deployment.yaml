@@ -34,7 +34,7 @@ spec:
         - "start"
         - "--import-realm"
         - "--spi-login-protocol-openid-connect-cors-enabled=true"
-        - "--spi-login-protocol-openid-connect-cors-allowed-origins=http://platform-auth.127.0.0.1.sslip.io,http://engineering-platform.local,http://localhost:4200,http://rod-foundation-demo.coder:8081,http://rod-foundation-demo.coder:8082,https://kc.kube-playground.io"
+        - "--spi-login-protocol-openid-connect-cors-allowed-origins=http://localhost:4200,https://kc.kube-playground.io,https://teams-ui.kube-playground.io"
         - "--spi-login-protocol-openid-connect-cors-allowed-methods=GET,POST,OPTIONS,PUT,DELETE"
         - "--spi-login-protocol-openid-connect-cors-allowed-headers=Authorization,Content-Type,Accept,Origin,X-Requested-With"
         env:
@@ -76,7 +76,7 @@ spec:
         - name: KC_HTTP_CORS_ENABLED
           value: "true"
         - name: KC_HTTP_CORS_ORIGINS
-          value: "http://platform-auth.127.0.0.1.sslip.io,http://engineering-platform.local,http://localhost:4200,http://rod-foundation-demo.coder:8081,http://rod-foundation-demo.coder:8082,https://kc.kube-playground.io"
+          value: "http://platform-auth.127.0.0.1.sslip.io,http://engineering-platform.local,http://localhost:4200,http://rod-foundation-demo.coder:8081,http://rod-foundation-demo.coder:8082,https://kc.kube-playground.io,https://teams-ui.kube-playground.io"
         - name: KC_HTTP_CORS_METHODS
           value: "GET,POST,PUT,DELETE,OPTIONS,HEAD"
         - name: KC_HTTP_CORS_HEADERS

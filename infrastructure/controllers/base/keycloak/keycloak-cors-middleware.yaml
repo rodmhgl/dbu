@@ -21,12 +21,9 @@ spec:
       - HEAD
       - PATCH
     accessControlAllowOriginList:
-      - http://platform-auth.127.0.0.1.sslip.io
-      - http://engineering-platform.local
       - http://localhost:4200
-      - http://rod-foundation-demo.coder:8081
-      - http://rod-foundation-demo.coder:8082
       - https://kc.kube-playground.io
+      - https://teams-ui.kube-playground.io
     accessControlExposeHeaders:
       - Location
     accessControlMaxAge: 3600
