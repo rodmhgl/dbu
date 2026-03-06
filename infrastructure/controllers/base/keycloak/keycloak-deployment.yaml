@@ -65,11 +65,11 @@ spec:
         - name: KC_HOSTNAME
           value: kc.kube-playground.io
         - name: KC_HOSTNAME_STRICT
-          value: "false"
+          value: "true"
         - name: KC_HTTP_ENABLED
           value: "true"
         - name: KC_HOSTNAME_STRICT_HTTPS
-          value: "false"
+          value: "true"
         - name: KC_PROXY
           value: "edge"
         # Global CORS configuration
