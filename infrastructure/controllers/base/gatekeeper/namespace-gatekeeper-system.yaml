@@ -4,6 +4,7 @@ metadata:
   labels:
     admission.gatekeeper.sh/ignore: no-self-managing
     control-plane: controller-manager
+    admission: "true"
     gatekeeper.sh/system: "yes"
     pod-security.kubernetes.io/audit: restricted
     pod-security.kubernetes.io/audit-version: latest
