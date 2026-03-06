@@ -22,9 +22,9 @@ spec:
         - "start"
         - "--import-realm"
         - "--spi-login-protocol-openid-connect-cors-enabled=true"
-        - "--spi-login-protocol-openid-connect-cors-allowed-origins=*"
+        - "--spi-login-protocol-openid-connect-cors-allowed-origins=http://platform-auth.127.0.0.1.sslip.io,http://engineering-platform.local,http://localhost:4200,http://rod-foundation-demo.coder:8081,http://rod-foundation-demo.coder:8082"
         - "--spi-login-protocol-openid-connect-cors-allowed-methods=GET,POST,OPTIONS,PUT,DELETE"
-        - "--spi-login-protocol-openid-connect-cors-allowed-headers=*"
+        - "--spi-login-protocol-openid-connect-cors-allowed-headers=Authorization,Content-Type,Accept,Origin,X-Requested-With"
         env:
         - name: KEYCLOAK_ADMIN
           valueFrom:
@@ -64,13 +64,13 @@ spec:
         - name: KC_HTTP_CORS_ENABLED
           value: "true"
         - name: KC_HTTP_CORS_ORIGINS
-          value: "http://teams-ui.127.0.0.1.sslip.io,http://localhost:4200,*"
+          value: "http://platform-auth.127.0.0.1.sslip.io,http://engineering-platform.local,http://localhost:4200,http://rod-foundation-demo.coder:8081,http://rod-foundation-demo.coder:8082"
         - name: KC_HTTP_CORS_METHODS
           value: "GET,POST,PUT,DELETE,OPTIONS,HEAD"
         - name: KC_HTTP_CORS_HEADERS
-          value: "*"
+          value: "Authorization,Content-Type,Accept,Origin,X-Requested-With"
         - name: KC_HTTP_CORS_EXPOSED_HEADERS
-          value: "*"
+          value: "Location"
         - name: KC_HTTP_CORS_MAX_AGE
           value: "3600"
         - name: KC_HTTP_CORS_ALLOW_CREDENTIALS

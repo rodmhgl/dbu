@@ -1,29 +1,31 @@
-kind: Middleware
 apiVersion: traefik.io/v1alpha1
+kind: Middleware
 metadata:
   name: cors
   namespace: keycloak
 spec:
   headers:
-    customRequestHeaders:
-      Access-Control-Allow-Origin: "*"
-      Access-Control-Allow-Methods: "GET,POST,PUT,DELETE,OPTIONS,HEAD,PATCH"
-      Access-Control-Allow-Headers: "*"
-      Access-Control-Allow-Credentials: "true"
-      Access-Control-Max-Age: "3600"
-    customResponseHeaders:
-      Access-Control-Allow-Origin: "*"
-      Access-Control-Allow-Methods: "GET,POST,PUT,DELETE,OPTIONS,HEAD,PATCH"
-      Access-Control-Allow-Headers: "*"
-      Access-Control-Allow-Credentials: "true"
-      Access-Control-Max-Age: "3600"
-    accessControlAllowMethods:
-      - "*"
-    accessControlAllowOriginListRegex:
-      - ".*"
-    accessControlAllowHeaders:
-      - "*"
-    accessControlExposeHeaders:
-      - "*"
     accessControlAllowCredentials: true
+    accessControlAllowHeaders:
+      - Authorization
+      - Content-Type
+      - Accept
+      - Origin
+      - X-Requested-With
+    accessControlAllowMethods:
+      - GET
+      - POST
+      - PUT
+      - DELETE
+      - OPTIONS
+      - HEAD
+      - PATCH
+    accessControlAllowOriginList:
+      - http://platform-auth.127.0.0.1.sslip.io
+      - http://engineering-platform.local
+      - http://localhost:4200
+      - http://rod-foundation-demo.coder:8081
+      - http://rod-foundation-demo.coder:8082
+    accessControlExposeHeaders:
+      - Location
     accessControlMaxAge: 3600
