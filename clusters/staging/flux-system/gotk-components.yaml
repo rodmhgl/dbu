@@ -6,6 +6,7 @@ apiVersion: v1
 kind: Namespace
 metadata:
   labels:
+    admission: "true"
     app.kubernetes.io/instance: flux-system
     app.kubernetes.io/part-of: flux
     app.kubernetes.io/version: v2.7.3
