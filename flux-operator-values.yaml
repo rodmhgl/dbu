@@ -11,3 +11,10 @@ web:
       - hosts:
           - flux.kube-playground.io
         secretName: star.kube-playground.io
+resources: # @schema required: true
+  limits:
+    cpu: 2000m
+    memory: 1Gi
+  requests: # @schema default: {"cpu":"100m","memory":"64Mi"}
+    cpu: 5m
+    memory: 64Mi
