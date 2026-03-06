@@ -1,0 +1,69 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    commit-sha: 8b514a1cb354
+  labels:
+    app: teams-operator
+  name: teams-operator
+  namespace: engineering-platform
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: teams-operator
+  template:
+    metadata:
+      labels:
+        app: teams-operator
+    spec:
+      containers:
+      - env:
+        - name: POLL_INTERVAL
+          value: "30"
+        - name: TEAMS_API_URL
+          value: "http://teams-api-service.engineering-platform.svc.cluster.local:4200"
+        image: olivercodes01/teams-operator:0.0.1
+        livenessProbe:
+          exec:
+            command:
+            - python
+            - -c
+            - "import sys; sys.exit(0)"
+          initialDelaySeconds: 30
+          periodSeconds: 30
+        name: teams-operator
+        readinessProbe:
+          exec:
+            command:
+            - python
+            - -c
+            - "import sys; sys.exit(0)"
+          initialDelaySeconds: 5
+          periodSeconds: 10
+        resources:
+          limits:
+            cpu: "200m"
+            memory: "256Mi"
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+        securityContext:
+          allowPrivilegeEscalation: false
+          capabilities:
+            drop:
+            - ALL
+          readOnlyRootFilesystem: true
+          runAsGroup: 1001
+          runAsNonRoot: true
+          runAsUser: 1001
+          seccompProfile:
+            type: RuntimeDefault
+      securityContext:
+        fsGroup: 1001
+        runAsGroup: 1001
+        runAsNonRoot: true
+        runAsUser: 1001
+        seccompProfile:
+          type: RuntimeDefault
+      serviceAccountName: teams-operator

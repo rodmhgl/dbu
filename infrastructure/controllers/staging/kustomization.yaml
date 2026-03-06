@@ -6,3 +6,4 @@ resources:
   - ./longhorn
   - ./traefik
   - ./falco
+  - ./teams-operator
