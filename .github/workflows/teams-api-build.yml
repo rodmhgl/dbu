@@ -1,11 +1,11 @@
-name: Teams UI — Build & Push
+name: Teams API — Build & Push
 
 on:
   push:
     branches: [main]
     paths:
-      - "teams-management/teams-app/**"
-      - ".github/workflows/teams-ui-build.yml"
+      - "teams-management/teams-api/**"
+      - ".github/workflows/teams-api-build.yml"
   workflow_dispatch:
 
 permissions:
@@ -29,7 +29,7 @@ jobs:
         id: semantic
         uses: cycjimmy/semantic-release-action@v4
         with:
-          working_directory: ./teams-management/teams-app
+          working_directory: ./teams-management/teams-api
           extra_plugins: |
             @semantic-release/commit-analyzer
             @semantic-release/release-notes-generator
@@ -60,7 +60,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ghcr.io/rodmhgl/teams-ui
+          images: ghcr.io/rodmhgl/teams-api
           tags: |
             type=semver,pattern={{version}},value=v${{ needs.release.outputs.new_release_version }}
             type=semver,pattern={{major}}.{{minor}},value=v${{ needs.release.outputs.new_release_version }}
@@ -68,15 +68,15 @@ jobs:
             type=sha,prefix=,format=short
             type=raw,value=latest
           labels: |
-            org.opencontainers.image.title=teams-ui
-            org.opencontainers.image.description=Teams Management UI — Angular application
+            org.opencontainers.image.title=teams-api
+            org.opencontainers.image.description=Teams Management API — FastAPI application
             org.opencontainers.image.version=${{ needs.release.outputs.new_release_version }}
             org.opencontainers.image.revision=${{ github.sha }}
 
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
-          context: teams-management/teams-app
+          context: teams-management/teams-api
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
