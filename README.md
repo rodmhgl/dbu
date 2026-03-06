@@ -23,33 +23,35 @@ kubelogin convert-kubeconfig -l azurecli
 
 ### Foundation
 
-  - [X] install flux
+- [X] install flux
 
 ### Compliance At the Point of Change (CAPOC)
 
-  - [X] Gatekeeper install
-  - [X] Gatekeeper policies
-  - [X] CAPOC policies
+- [X] Gatekeeper install
+- [X] Gatekeeper policies
+- [X] CAPOC policies
 
 ### Runtime Security
 
-  - [X] Falco install
-  - [ ] Falco rules
-  - [ ] Trivy install
-  - [ ] Trivy integration with Gatekeeper?
+- [X] Falco install
+- [ ] Falco rules
+- [ ] Trivy install
+- [ ] Trivy integration with Gatekeeper?
 
 ### Monitoring
 
-  - [X] Kube Prometheus Stack Setup (w/ Ingress)
+- [X] Kube Prometheus Stack Setup (w/ Ingress)
 
 ### Authentication
 
-  - [X] Keycloak
+- [X] Keycloak
 
 ### Platform
 
-  - [-] Teams API install
-  - [-] Teams APP install
-  - [-] Teams CLI install
-  - [-] Teams Operator install
-  - [ ] Flux Operator Install
+- [X] Teams API install
+- [X] Teams APP install
+  - [X] Validate operation (Create/Delete)
+- [X] Teams CLI install
+- [X] Teams Operator install
+  - [X] Validate operation (Create/Delete)
+- [X] Flux Operator Install
