@@ -32,8 +32,8 @@ spec:
           value: "http://teams-api-service:4200"
         resources:
           requests:
-            memory: "64Mi"
-            cpu: "50m"
+            memory: "32Mi"
+            cpu: "5m"
           limits:
             memory: "128Mi"
             cpu: "100m"
