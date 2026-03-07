@@ -14,7 +14,7 @@ COPY . .
 RUN npm run build:prod
 
 # Use nginx to serve the app
-FROM nginx:alpine
+FROM ghcr.io/nginx/nginx-unprivileged:alpine
 
 # Copy built app to nginx
 COPY --from=build /app/dist/teams-ui /usr/share/nginx/html
@@ -22,6 +22,6 @@ COPY --from=build /app/dist/teams-ui /usr/share/nginx/html
 # Copy nginx configuration
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-EXPOSE 80
+EXPOSE 8080
 
 CMD ["nginx", "-g", "daemon off;"]
