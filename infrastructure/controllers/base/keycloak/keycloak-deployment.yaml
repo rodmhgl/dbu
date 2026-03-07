@@ -72,6 +72,8 @@ spec:
           value: "https://kc.kube-playground.io"
         - name: KC_HTTP_ENABLED
           value: "true"
+        - name: KC_METRICS_ENABLED 
+          value: "true"
         - name: KC_PROXY
           value: "edge"
         - name: KC_PROXY_HEADERS
