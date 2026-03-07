@@ -32,22 +32,76 @@ spec:
       artifact:
         install:
           enabled: true
+          # -- Arguments to pass to the falcoctl-artifact-install init container.
+          args: ["--log-format=json"]
+          # -- Resources requests and limits for the falcoctl-artifact-install init container.
+          resources: {}
+          # -- Security context for the falcoctl init container.
+          securityContext: {}
+          # -- A list of volume mounts you want to add to the falcoctl-artifact-install init container.
+          mounts:
+            volumeMounts: []
+        # -- Runs "falcoctl artifact follow" command as a sidecar container. It is used to automatically check for
+        # updates given a list of artifacts. If an update is found it downloads and installs it in a shared folder (emptyDir)
+        # that is accessible by Falco. Rulesfiles are automatically detected and loaded by Falco once they are installed in the
+        # correct folder by falcoctl. To prevent new versions of artifacts from breaking Falco, the tool checks if it is compatible
+        # with the running version of Falco before installing it.
         follow:
           enabled: true
+          # -- Extra environment variables that will be pass onto falcoctl-artifact-follow sidecar container.
+          env: []
+          # -- Extra environment variables that will be passed onto falcoctl-artifact-follow sidecar container that can come from a ConfigMap or Secret.
+          envFrom: []
+          # -- Arguments to pass to the falcoctl-artifact-follow sidecar container.
+          args: ["--log-format=json"]
+          # -- Resources requests and limits for the falcoctl-artifact-follow sidecar container.
+          resources: {}
+          # -- Security context for the falcoctl-artifact-follow sidecar container.
+          securityContext: {}
+          # -- A list of volume mounts you want to add to the falcoctl-artifact-follow sidecar container.
+          mounts:
+            volumeMounts: []
+      # -- Configuration file of the falcoctl tool. It is saved in a configmap and mounted on the falcotl containers.
       config:
+        # -- List of indexes that falcoctl downloads and uses to locate and download artiafcts. For more info see:
+        # https://github.com/falcosecurity/falcoctl/blob/main/proposals/20220916-rules-and-plugin-distribution.md#index-file-overview
         indexes:
-        - name: falcosecurity
-          url: "https://ghcr.io/falcosecurity/rules/falco-rules:sha256-f226fc28b027121ea0d1e85279e41523e8b96726b30c8b34e48b9ff8de3b8665.sig"
+          - name: falcosecurity
+            url: https://falcosecurity.github.io/falcoctl/index.yaml
+        # -- Configuration used by the artifact commands.
         artifact:
+          # -- List of artifact types that falcoctl will handle. If the configured refs resolves to an artifact whose type is not contained
+          # in the list it will refuse to download and install that artifact.
           allowedTypes:
             - rulesfile
             - plugin
           install:
+            # -- Resolve the dependencies for artifacts.
             resolveDeps: true
-            refs: [k8saudit-rules:0.5, falco-rules:0]
+            # -- List of artifacts to be installed by the falcoctl init container.
+            refs: [falco-rules:5]
+            # -- Directory where the rulesfiles are saved. The path is relative to the container, which in this case is an emptyDir
+            # mounted also by the Falco pod.
+            rulesfilesDir: /rulesfiles
+            # -- Same as the one above but for the artifacts.
+            pluginsDir: /plugins
+            # -- Directory where falcoctl will save its artifact state files. This directory is shared between the init container
+            # and the sidecar to maintain state consistency across artifact install and follow operations.
+            stateDir: /artifactstate
           follow:
-            refs: [k8saudit-rules:0.5, falco-rules:0]
-            every: 6h
+            # -- List of artifacts to be followed by the falcoctl sidecar container.
+            refs: [falco-rules:5]
+            # -- How often the tool checks for new versions of the followed artifacts.
+            every: 168h
+            # -- HTTP endpoint that serves the api versions of the Falco instance. It is used to check if the new versions are compatible
+            # with the running Falco instance.
+            falcoversions: http://localhost:8765/versions
+            # -- See the fields of the artifact.install section.
+            rulesfilesDir: /rulesfiles
+            # -- See the fields of the artifact.install section.
+            pluginsDir: /plugins
+            # -- See the fields of the artifact.install section.
+            stateDir: /artifactstate
     webserver:
       prometheus_metrics_enabled: true
     metrics:
