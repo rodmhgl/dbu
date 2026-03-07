@@ -40,6 +40,7 @@ spec:
         - "--spi-login-protocol-openid-connect-cors-allowed-origins=http://localhost:4200,https://kc.kube-playground.io,https://teams-ui.kube-playground.io"
         - "--spi-login-protocol-openid-connect-cors-allowed-methods=GET,POST,OPTIONS,PUT,DELETE"
         - "--spi-login-protocol-openid-connect-cors-allowed-headers=Authorization,Content-Type,Accept,Origin,X-Requested-With"
+        - "--metrics-enabled=true"
         env:
         - name: KEYCLOAK_ADMIN
           valueFrom:
