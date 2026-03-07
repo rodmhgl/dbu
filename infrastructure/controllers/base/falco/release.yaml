@@ -19,32 +19,32 @@ spec:
   driftDetection:
     mode: enabled
     ignore: []
+  valuesFrom:
+    - kind: ConfigMap
+      name: falco-custom-rules
+      valuesKey: custom-rules-values.yaml
   values:
     driver:
       kind: modern_ebpf
     falcosidekick:
       enabled: true
-    # falcoctl:
-    #   artifact:
-    #     install:
-    #       enabled: true
-    #     follow:
-    #       enabled: true
-    #   config:
-    #     indexes:
-    #     - name: falcosecurity
-    #       url: https://falcosecurity.github.io/falcoctl/index.yaml
-    #     artifact:
-    #       allowedTypes:
-    #         - rulesfile
-    #         - plugin
-    #       install:
-    #         resolveDeps: true
-    #         refs: [k8saudit-rules:0.5, falco-rules:0]
-    #       follow:
-    #         refs: [k8saudit-rules:0.5, falco-rules:0]
-    #         every: 6h
-  valuesFrom:
-    - kind: ConfigMap
-      name: falco-custom-rules
-      valuesKey: custom-rules-values.yaml
+    falcoctl:
+      artifact:
+        install:
+          enabled: true
+        follow:
+          enabled: true
+      config:
+        indexes:
+        - name: falcosecurity
+          url: https://falcosecurity.github.io/falcoctl/index.yaml
+        artifact:
+          allowedTypes:
+            - rulesfile
+            - plugin
+          install:
+            resolveDeps: true
+            refs: [k8saudit-rules:0.5, falco-rules:0]
+          follow:
+            refs: [k8saudit-rules:0.5, falco-rules:0]
+            every: 6h
