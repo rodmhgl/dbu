@@ -24,3 +24,7 @@ spec:
       kind: modern_ebpf
     falcosidekick:
       enabled: true
+  valuesFrom:
+    - kind: ConfigMap
+      name: falco-custom-rules
+      valueKey: root-detect-rule.yaml
