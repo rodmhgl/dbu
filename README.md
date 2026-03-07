@@ -14,7 +14,7 @@ flux bootstrap github \
 ## AKS Credentials
 
 ```text
-az account set --subscription 02892755-eecf-4df8-bc08-a55279be6b35
+az account set --subscription 12345678-abcd-9ef0-ab12-c34567cd8e90
 az aks get-credentials --resource-group rg-back-stack-aks-pe --name back-stack-aks-pe --overwrite-existing
 kubelogin convert-kubeconfig -l azurecli
 ```
@@ -34,7 +34,7 @@ kubelogin convert-kubeconfig -l azurecli
 ### Runtime Security
 
 - [X] Falco install
-- [ ] Falco rules
+- [X] Falco rules
 - [ ] Trivy install
 - [ ] Trivy integration with Gatekeeper?
 
