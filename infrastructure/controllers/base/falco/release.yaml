@@ -48,3 +48,24 @@ spec:
           follow:
             refs: [k8saudit-rules:0.5, falco-rules:0]
             every: 6h
+    webserver:
+      prometheus_metrics_enabled: true
+    metrics:
+      enabled: false
+      interval: 1h
+      # Typically, in production, you only use `output_rule` or `output_file`, but not both. 
+      # However, if you have a very unique use case, you can use both together.
+      # Set `webserver.prometheus_metrics_enabled` for Prometheus output.
+      output_rule: true
+      # output_file: /tmp/falco_stats.jsonl
+      rules_counters_enabled: true
+      resource_utilization_enabled: true
+      state_counters_enabled: true
+      kernel_event_counters_enabled: true
+      # Enabling `kernel_event_counters_per_cpu_enabled` automatically enables `kernel_event_counters_enabled`
+      kernel_event_counters_per_cpu_enabled: false
+      libbpf_stats_enabled: true
+      plugins_metrics_enabled: true
+      jemalloc_stats_enabled: false
+      convert_memory_to_mb: true
+      include_empty_values: false
