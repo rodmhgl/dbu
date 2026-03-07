@@ -37,7 +37,7 @@ spec:
       config:
         indexes:
         - name: falcosecurity
-          url: ghcr.io/falcosecurity/rules/falco-rules:sha256-f226fc28b027121ea0d1e85279e41523e8b96726b30c8b34e48b9ff8de3b8665.sig
+          url: https://ghcr.io/falcosecurity/rules/falco-rules:sha256-f226fc28b027121ea0d1e85279e41523e8b96726b30c8b34e48b9ff8de3b8665.sig
         artifact:
           allowedTypes:
             - rulesfile
