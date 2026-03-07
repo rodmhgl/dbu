@@ -4,3 +4,4 @@ resources:
   - simple-constraint-template.yaml
   - quality-constraint-template.yaml
   - cve-constraint-template.yaml
+  - root-prevention-template.yaml
