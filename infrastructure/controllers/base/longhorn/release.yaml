@@ -25,14 +25,14 @@ spec:
       nodeDrainPolicy: always-allow
       replicaAutoBalance: best-effort
       storageMinimalAvailablePercentage: 10
-    ingress:
-      enabled: true
-      ingressClassName: traefik
-      host: longhorn-dbu.kube-playground.io
-      tls: true
-      tlsSecret: star.kube-playground.io
-      path: /
-      pathType: ImplementationSpecific
+    # ingress:
+    #   enabled: true
+    #   ingressClassName: traefik
+    #   host: longhorn-dbu.kube-playground.io
+    #   tls: true
+    #   tlsSecret: star.kube-playground.io
+    #   path: /
+    #   pathType: ImplementationSpecific
     metrics:
       serviceMonitor:
         enabled: true
