@@ -71,6 +71,7 @@ spec:
             pluginsDir: /plugins
             stateDir: /artifactstate
     webserver:
+      enabled: true
       prometheus_metrics_enabled: true
     metrics:
       enabled: true
