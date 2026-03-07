@@ -35,8 +35,9 @@ kind: Ingress
 metadata:
   name: teams-ui-ingress
   annotations:
-    traefik.ingress.kubernetes.io/router.entrypoints: web
     kubernetes.io/ingress.class: traefik
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+    traefik.ingress.kubernetes.io/router.middlewares: engineering-platform-ip-allowlist@kubernetescrd
 spec:
   rules:
   - host: teams-ui.kube-playground.io #teams-ui.127.0.0.1.sslip.io
