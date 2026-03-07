@@ -4,5 +4,4 @@ resources:
   - namespace.yaml
   - release.yaml
   - repository.yaml
-  - root-detect-rule.yaml
   - custom-rule-configmap.yaml
