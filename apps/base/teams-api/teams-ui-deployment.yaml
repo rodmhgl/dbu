@@ -24,6 +24,8 @@ spec:
     spec:
       securityContext:
         runAsNonRoot: true
+        runAsUser: 101
+        runAsGroup: 101
       containers:
       - name: teams-ui
         image: ghcr.io/rodmhgl/teams-ui:1.4.0
