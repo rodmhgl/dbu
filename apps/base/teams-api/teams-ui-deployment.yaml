@@ -22,6 +22,8 @@ spec:
         app: teams-ui
         component: frontend
     spec:
+      securityContext:
+        runAsNonRoot: true
       containers:
       - name: teams-ui
         image: ghcr.io/rodmhgl/teams-ui:1.4.0
