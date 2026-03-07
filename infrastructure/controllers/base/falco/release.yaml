@@ -96,7 +96,8 @@ spec:
       path: /metrics
       # If your Prometheus deployment is configured to use serviceMonitorSelector, then add the right
       # label here in order for the ServiceMonitor to be selected for target discovery.
-      labels: {}
+      labels:
+        release: kube-prometheus-stack
       # -- selector set of labels that should match the labels on the Service targeted by the current serviceMonitor.
       selector: {}
       # -- interval specifies the time interval at which Prometheus should scrape metrics from the service.
