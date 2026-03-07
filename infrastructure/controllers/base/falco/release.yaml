@@ -27,4 +27,4 @@ spec:
   valuesFrom:
     - kind: ConfigMap
       name: falco-custom-rules
-      valueKey: root-detect-rule.yaml
+      valueKey: custom-rules-values.yaml
