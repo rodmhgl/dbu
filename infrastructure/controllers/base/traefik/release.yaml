@@ -19,3 +19,7 @@ spec:
   driftDetection:
     mode: enabled
     ignore: []
+  values:
+    deployment:
+      annotations:
+        commit-sha: 8b514a1cb354
