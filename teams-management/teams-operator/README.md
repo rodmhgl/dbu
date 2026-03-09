@@ -87,7 +87,7 @@ For development and customization:
 
 ```bash
 # Build your own container image
-docker build -t teams-operator:local -f operator.Dockerfile .
+docker build -t teams-operator:local .
 
 # Update the deployment to use your local image
 # Then deploy
