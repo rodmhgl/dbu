@@ -66,6 +66,15 @@ class TestApplyCoreResource(unittest.TestCase):
         self.assertFalse(result)
         patch_fn.assert_not_called()
 
+    def test_patch_unexpected_exception_returns_false(self):
+        """Non-ApiException from patch_fn should return False, not propagate."""
+        op = self._make_operator()
+        create_fn = MagicMock(side_effect=_make_api_exception(409))
+        patch_fn = MagicMock(side_effect=ValueError("bad serialization"))
+        result = op._apply_core_resource("TestResource", "ns", create_fn, patch_fn)
+        self.assertFalse(result)
+        patch_fn.assert_called_once()
+
 
 class TestProvisionNamespaceResources(unittest.TestCase):
     """Tests for TeamsOperator.provision_namespace_resources()."""

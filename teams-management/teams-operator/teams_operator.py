@@ -162,7 +162,7 @@ class TeamsOperator:
                     patch_fn()
                     logger.info(f"  🔄 Patched existing {resource_name} in '{namespace_name}'")
                     return True
-                except ApiException as patch_err:
+                except Exception as patch_err:
                     logger.error(
                         f"  ❌ Failed to patch {resource_name} in '{namespace_name}': {patch_err}"
                     )
