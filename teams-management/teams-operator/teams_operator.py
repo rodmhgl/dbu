@@ -12,6 +12,7 @@ from kubernetes import client, config
 from kubernetes.client.rest import ApiException
 
 from resources import (
+    MANAGED_BY_LABEL,
     build_limit_range,
     build_network_policy_allow_ingress_controller,
     build_network_policy_allow_prometheus,
@@ -92,34 +93,48 @@ class TeamsOperator:
     
     def create_namespace(self, team_id: str, team_name: str, namespace_name: str) -> bool:
         """Create a Kubernetes namespace for the team"""
+        labels = {
+            "admission": "true",
+            "app.kubernetes.io/managed-by": MANAGED_BY_LABEL,
+            "teams.example.com/team-id": team_id,
+            "teams.example.com/team-name": sanitize_label_value(team_name),
+        }
+        annotations = {
+            "teams.example.com/original-team-name": team_name,
+            "teams.example.com/created-by": MANAGED_BY_LABEL,
+            "teams.example.com/team-id": team_id,
+        }
         try:
-            # Define namespace metadata
             namespace_body = client.V1Namespace(
                 metadata=client.V1ObjectMeta(
                     name=namespace_name,
-                    labels={
-                        "admission": "true",
-                        "app.kubernetes.io/managed-by": "teams-operator",
-                        "teams.example.com/team-id": team_id,
-                        "teams.example.com/team-name": sanitize_label_value(team_name),
-                    },
-                    annotations={
-                        "teams.example.com/original-team-name": team_name,
-                        "teams.example.com/created-by": "teams-operator",
-                        "teams.example.com/team-id": team_id
-                    }
+                    labels=labels,
+                    annotations=annotations,
                 )
             )
-            
+
             # Create the namespace
             self.k8s_core_v1.create_namespace(body=namespace_body)
             logger.info(f"✅ Created namespace '{namespace_name}' for team '{team_name}' (ID: {team_id})")
             return True
-            
+
         except ApiException as e:
-            if e.status == 409:  # Namespace already exists
-                logger.warning(f"⚠️ Namespace '{namespace_name}' already exists")
-                return True
+            if e.status == 409:  # Namespace already exists — converge labels
+                logger.warning(f"⚠️ Namespace '{namespace_name}' already exists, patching labels")
+                try:
+                    patch_body = client.V1Namespace(
+                        metadata=client.V1ObjectMeta(
+                            labels=labels,
+                            annotations=annotations,
+                        )
+                    )
+                    self.k8s_core_v1.patch_namespace(namespace_name, patch_body)
+                    return True
+                except Exception as patch_err:
+                    logger.error(
+                        f"❌ Failed to patch namespace '{namespace_name}' labels: {patch_err}"
+                    )
+                    return False
             else:
                 logger.error(f"❌ Failed to create namespace '{namespace_name}': {e}")
                 return False

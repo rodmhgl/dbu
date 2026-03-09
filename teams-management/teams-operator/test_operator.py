@@ -6,6 +6,8 @@ from unittest.mock import MagicMock, patch
 
 from kubernetes.client.rest import ApiException
 
+from resources import MANAGED_BY_LABEL
+
 
 def _make_api_exception(status: int) -> ApiException:
     """Build a minimal ApiException with the given HTTP status."""
@@ -181,8 +183,30 @@ class TestCreateNamespaceAdmissionLabel(unittest.TestCase):
         op.create_namespace("t1", "Test", "team-test")
         body = core.create_namespace.call_args[1]["body"]
         self.assertEqual(
-            body.metadata.labels["app.kubernetes.io/managed-by"], "teams-operator"
+            body.metadata.labels["app.kubernetes.io/managed-by"], MANAGED_BY_LABEL
         )
+
+    def test_409_patches_existing_namespace_labels(self):
+        """On 409, patch_namespace should be called to converge labels."""
+        op, core = self._make_operator()
+        core.create_namespace.side_effect = _make_api_exception(409)
+        result = op.create_namespace("t1", "Test", "team-test")
+        self.assertTrue(result)
+        core.patch_namespace.assert_called_once()
+        patch_body = core.patch_namespace.call_args[0][1]
+        self.assertEqual(patch_body.metadata.labels["admission"], "true")
+        self.assertEqual(
+            patch_body.metadata.labels["app.kubernetes.io/managed-by"],
+            MANAGED_BY_LABEL,
+        )
+
+    def test_409_patch_failure_returns_false(self):
+        """If the 409 label patch fails, create_namespace should return False."""
+        op, core = self._make_operator()
+        core.create_namespace.side_effect = _make_api_exception(409)
+        core.patch_namespace.side_effect = _make_api_exception(500)
+        result = op.create_namespace("t1", "Test", "team-test")
+        self.assertFalse(result)
 
 
 class TestReconcileTeamsEnrichment(unittest.TestCase):
