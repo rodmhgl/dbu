@@ -61,12 +61,13 @@ class TeamsOperator:
         # Ensure it starts and ends with alphanumeric
         namespace = namespace.strip('-')
         
-        # Kubernetes namespace names must be <= 63 characters
-        if len(namespace) > 63:
-            namespace = namespace[:63].rstrip('-')
-            
-        # Add prefix to avoid conflicts
-        namespace = f"team-{namespace}"
+        # Add prefix to avoid conflicts; total must be <= 63 characters
+        prefix = "team-"
+        max_base = 63 - len(prefix)
+        if len(namespace) > max_base:
+            namespace = namespace[:max_base].rstrip('-')
+
+        namespace = f"{prefix}{namespace}"
         
         return namespace
     

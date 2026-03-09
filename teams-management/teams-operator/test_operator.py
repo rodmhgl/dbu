@@ -109,6 +109,46 @@ class TestProvisionNamespaceResources(unittest.TestCase):
         core.patch_namespaced_resource_quota.assert_called_once()
 
 
+class TestSanitizeNamespaceName(unittest.TestCase):
+    """Tests for TeamsOperator.sanitize_namespace_name()."""
+
+    def _make_operator(self):
+        with patch("teams_operator.config.load_incluster_config"), \
+             patch("teams_operator.client.CoreV1Api"), \
+             patch("teams_operator.client.NetworkingV1Api"), \
+             patch("teams_operator.client.RbacAuthorizationV1Api"):
+            from teams_operator import TeamsOperator
+            return TeamsOperator()
+
+    def test_simple_name(self):
+        op = self._make_operator()
+        self.assertEqual(op.sanitize_namespace_name("Alpha"), "team-alpha")
+
+    def test_long_name_stays_within_63_chars(self):
+        op = self._make_operator()
+        long_name = "a" * 200
+        result = op.sanitize_namespace_name(long_name)
+        self.assertLessEqual(len(result), 63)
+        self.assertTrue(result.startswith("team-"))
+
+    def test_exact_boundary_58_chars_base(self):
+        """A 58-char base should produce exactly 63 chars total."""
+        op = self._make_operator()
+        base = "a" * 58
+        result = op.sanitize_namespace_name(base)
+        self.assertEqual(len(result), 63)
+        self.assertEqual(result, "team-" + "a" * 58)
+
+    def test_trailing_hyphen_after_truncation(self):
+        """If truncation lands on a hyphen, it should be stripped."""
+        op = self._make_operator()
+        # 57 alphanumeric chars + hyphen at position 58 + more chars
+        name = "a" * 57 + "-" + "b" * 10
+        result = op.sanitize_namespace_name(name)
+        self.assertLessEqual(len(result), 63)
+        self.assertFalse(result.endswith("-"))
+
+
 class TestCreateNamespaceAdmissionLabel(unittest.TestCase):
     """Verify create_namespace() includes the admission label."""
 
