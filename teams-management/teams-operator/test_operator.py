@@ -28,35 +28,35 @@ class TestApplyCoreResource(unittest.TestCase):
     def test_create_succeeds(self):
         op = self._make_operator()
         create_fn = MagicMock()
-        replace_fn = MagicMock()
-        result = op._apply_core_resource("TestResource", "ns", create_fn, replace_fn)
+        patch_fn = MagicMock()
+        result = op._apply_core_resource("TestResource", "ns", create_fn, patch_fn)
         self.assertTrue(result)
         create_fn.assert_called_once()
-        replace_fn.assert_not_called()
+        patch_fn.assert_not_called()
 
-    def test_create_409_then_replace_succeeds(self):
+    def test_create_409_then_patch_succeeds(self):
         op = self._make_operator()
         create_fn = MagicMock(side_effect=_make_api_exception(409))
-        replace_fn = MagicMock()
-        result = op._apply_core_resource("TestResource", "ns", create_fn, replace_fn)
+        patch_fn = MagicMock()
+        result = op._apply_core_resource("TestResource", "ns", create_fn, patch_fn)
         self.assertTrue(result)
         create_fn.assert_called_once()
-        replace_fn.assert_called_once()
+        patch_fn.assert_called_once()
 
-    def test_create_409_then_replace_fails(self):
+    def test_create_409_then_patch_fails(self):
         op = self._make_operator()
         create_fn = MagicMock(side_effect=_make_api_exception(409))
-        replace_fn = MagicMock(side_effect=_make_api_exception(500))
-        result = op._apply_core_resource("TestResource", "ns", create_fn, replace_fn)
+        patch_fn = MagicMock(side_effect=_make_api_exception(500))
+        result = op._apply_core_resource("TestResource", "ns", create_fn, patch_fn)
         self.assertFalse(result)
 
     def test_create_non_409_error(self):
         op = self._make_operator()
         create_fn = MagicMock(side_effect=_make_api_exception(403))
-        replace_fn = MagicMock()
-        result = op._apply_core_resource("TestResource", "ns", create_fn, replace_fn)
+        patch_fn = MagicMock()
+        result = op._apply_core_resource("TestResource", "ns", create_fn, patch_fn)
         self.assertFalse(result)
-        replace_fn.assert_not_called()
+        patch_fn.assert_not_called()
 
 
 class TestProvisionNamespaceResources(unittest.TestCase):
@@ -93,12 +93,12 @@ class TestProvisionNamespaceResources(unittest.TestCase):
         core.create_namespaced_service_account.assert_called_once()
         rbac.create_namespaced_role_binding.assert_called_once()
 
-    def test_409_triggers_replace(self):
+    def test_409_triggers_patch(self):
         op, core, net, rbac = self._make_operator()
         core.create_namespaced_resource_quota.side_effect = _make_api_exception(409)
         op.provision_namespace_resources("t1", "Team One", "team-team-one")
 
-        core.replace_namespaced_resource_quota.assert_called_once()
+        core.patch_namespaced_resource_quota.assert_called_once()
 
 
 class TestCreateNamespaceAdmissionLabel(unittest.TestCase):

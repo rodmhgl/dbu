@@ -15,11 +15,40 @@ from resources import (
     build_resource_quota,
     build_role_binding,
     build_service_account,
+    sanitize_label_value,
 )
 
 NS = "team-backend"
 TEAM_ID = "abc-123"
 TEAM_NAME = "Backend Team"
+
+
+class TestSanitizeLabelValue(unittest.TestCase):
+    def test_spaces_to_hyphens(self):
+        self.assertEqual(sanitize_label_value("My Cool Team"), "my-cool-team")
+
+    def test_special_chars_stripped(self):
+        self.assertEqual(sanitize_label_value("R&D/Team.One"), "r-d-team-one")
+
+    def test_consecutive_hyphens_collapsed(self):
+        self.assertEqual(sanitize_label_value("a&&&&b"), "a-b")
+
+    def test_leading_trailing_hyphens_stripped(self):
+        self.assertEqual(sanitize_label_value("---hello---"), "hello")
+
+    def test_truncated_to_63_chars(self):
+        long_name = "a" * 100
+        result = sanitize_label_value(long_name)
+        self.assertLessEqual(len(result), 63)
+
+    def test_truncation_strips_trailing_hyphen(self):
+        name = "a" * 62 + "-b"
+        result = sanitize_label_value(name)
+        self.assertLessEqual(len(result), 63)
+        self.assertTrue(result[-1].isalnum())
+
+    def test_simple_name(self):
+        self.assertEqual(sanitize_label_value("backend"), "backend")
 
 
 class TestCommonLabels(unittest.TestCase):
@@ -32,6 +61,10 @@ class TestCommonLabels(unittest.TestCase):
     def test_team_name_sanitized(self):
         labels = _common_labels(TEAM_ID, "My Cool Team")
         self.assertEqual(labels["teams.example.com/team-name"], "my-cool-team")
+
+    def test_special_chars_in_team_name(self):
+        labels = _common_labels(TEAM_ID, "R&D/Platform")
+        self.assertEqual(labels["teams.example.com/team-name"], "r-d-platform")
 
 
 class TestBuildResourceQuota(unittest.TestCase):

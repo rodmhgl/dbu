@@ -20,6 +20,7 @@ from resources import (
     build_resource_quota,
     build_role_binding,
     build_service_account,
+    sanitize_label_value,
 )
 
 # Configure logging
@@ -99,7 +100,7 @@ class TeamsOperator:
                         "admission": "true",
                         "app.kubernetes.io/managed-by": "teams-operator",
                         "teams.example.com/team-id": team_id,
-                        "teams.example.com/team-name": team_name.replace(" ", "-").lower(),
+                        "teams.example.com/team-name": sanitize_label_value(team_name),
                     },
                     annotations={
                         "teams.example.com/original-team-name": team_name,
@@ -147,9 +148,9 @@ class TeamsOperator:
         resource_name: str,
         namespace_name: str,
         create_fn,
-        replace_fn,
+        patch_fn,
     ) -> bool:
-        """Idempotent create-or-replace for a single resource."""
+        """Idempotent create-or-patch for a single resource."""
         try:
             create_fn()
             logger.info(f"  ✅ Created {resource_name} in '{namespace_name}'")
@@ -157,12 +158,12 @@ class TeamsOperator:
         except ApiException as e:
             if e.status == 409:
                 try:
-                    replace_fn()
-                    logger.info(f"  🔄 Updated existing {resource_name} in '{namespace_name}'")
+                    patch_fn()
+                    logger.info(f"  🔄 Patched existing {resource_name} in '{namespace_name}'")
                     return True
-                except ApiException as replace_err:
+                except ApiException as patch_err:
                     logger.error(
-                        f"  ❌ Failed to replace {resource_name} in '{namespace_name}': {replace_err}"
+                        f"  ❌ Failed to patch {resource_name} in '{namespace_name}': {patch_err}"
                     )
                     return False
             else:
@@ -182,7 +183,7 @@ class TeamsOperator:
         self._apply_core_resource(
             "ResourceQuota", namespace_name,
             lambda: self.k8s_core_v1.create_namespaced_resource_quota(namespace_name, quota),
-            lambda: self.k8s_core_v1.replace_namespaced_resource_quota("team-quota", namespace_name, quota),
+            lambda: self.k8s_core_v1.patch_namespaced_resource_quota("team-quota", namespace_name, quota),
         )
 
         # --- LimitRange ---
@@ -190,7 +191,7 @@ class TeamsOperator:
         self._apply_core_resource(
             "LimitRange", namespace_name,
             lambda: self.k8s_core_v1.create_namespaced_limit_range(namespace_name, lr),
-            lambda: self.k8s_core_v1.replace_namespaced_limit_range("team-limits", namespace_name, lr),
+            lambda: self.k8s_core_v1.patch_namespaced_limit_range("team-limits", namespace_name, lr),
         )
 
         # --- NetworkPolicies ---
@@ -205,7 +206,7 @@ class TeamsOperator:
             self._apply_core_resource(
                 f"NetworkPolicy/{np_name}", namespace_name,
                 lambda b=body: self.k8s_networking_v1.create_namespaced_network_policy(namespace_name, b),
-                lambda b=body: self.k8s_networking_v1.replace_namespaced_network_policy(np_name, namespace_name, b),
+                lambda b=body: self.k8s_networking_v1.patch_namespaced_network_policy(np_name, namespace_name, b),
             )
 
         # --- ServiceAccount ---
@@ -213,7 +214,7 @@ class TeamsOperator:
         self._apply_core_resource(
             "ServiceAccount/team-deployer", namespace_name,
             lambda: self.k8s_core_v1.create_namespaced_service_account(namespace_name, sa),
-            lambda: self.k8s_core_v1.replace_namespaced_service_account("team-deployer", namespace_name, sa),
+            lambda: self.k8s_core_v1.patch_namespaced_service_account("team-deployer", namespace_name, sa),
         )
 
         # --- RoleBinding ---
@@ -221,7 +222,7 @@ class TeamsOperator:
         self._apply_core_resource(
             "RoleBinding/team-edit-binding", namespace_name,
             lambda: self.k8s_rbac_v1.create_namespaced_role_binding(namespace_name, rb),
-            lambda: self.k8s_rbac_v1.replace_namespaced_role_binding("team-edit-binding", namespace_name, rb),
+            lambda: self.k8s_rbac_v1.patch_namespaced_role_binding("team-edit-binding", namespace_name, rb),
         )
 
         logger.info(f"🔧 Enrichment provisioning complete for '{namespace_name}'")

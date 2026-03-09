@@ -11,12 +11,26 @@ from kubernetes import client
 MANAGED_BY_LABEL = "teams-operator"
 
 
+def sanitize_label_value(value: str) -> str:
+    """Sanitize a string to be a valid Kubernetes label value.
+
+    Label values must be <= 63 chars and match [a-z0-9A-Z]([a-z0-9A-Z._-]*[a-z0-9A-Z])?.
+    """
+    sanitized = value.lower()
+    sanitized = "".join(c if c.isalnum() else "-" for c in sanitized)
+    sanitized = "-".join(filter(None, sanitized.split("-")))
+    sanitized = sanitized.strip("-")
+    if len(sanitized) > 63:
+        sanitized = sanitized[:63].rstrip("-")
+    return sanitized
+
+
 def _common_labels(team_id: str, team_name: str) -> dict:
     """Return standard labels applied to all enrichment resources."""
     return {
         "app.kubernetes.io/managed-by": MANAGED_BY_LABEL,
         "teams.example.com/team-id": team_id,
-        "teams.example.com/team-name": team_name.replace(" ", "-").lower(),
+        "teams.example.com/team-name": sanitize_label_value(team_name),
     }
 
 
@@ -186,7 +200,7 @@ def build_service_account(
             labels=_common_labels(team_id, team_name),
             annotations={
                 "teams.example.com/team-id": team_id,
-                "teams.example.com/team-name": team_name.replace(" ", "-").lower(),
+                "teams.example.com/team-name": sanitize_label_value(team_name),
             },
         ),
     )
