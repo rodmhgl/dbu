@@ -9,7 +9,9 @@ spec:
         kinds: ["Pod"]
       - apiGroups: ["apps"]
         kinds: ["Deployment"]
-    namespaces: ["default", "production", "staging", "engineering-platform"]
+    namespaceSelector:
+      matchLabels:
+        admission: "true"
   parameters:
     exemptNamespaces:
       - "kube-system"
