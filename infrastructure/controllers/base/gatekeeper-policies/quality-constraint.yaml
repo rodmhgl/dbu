@@ -7,7 +7,9 @@ spec:
     kinds:
       - apiGroups: ["apps"]
         kinds: ["Deployment"]
-    namespaces: ["default", "production", "staging", "teams-api", "engineering-platform"]
+    namespaceSelector:
+      matchLabels:
+        admission: "true"
   parameters:
     minimumCoverage: 80
     coverageData:

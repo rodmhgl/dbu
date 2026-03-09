@@ -4,14 +4,25 @@ Teams Operator - Creates Kubernetes namespaces when teams are created in the Tea
 """
 
 import asyncio
-import json
 import logging
 import os
-import time
-from typing import Set, Dict, Any
+from typing import Set, Dict
 import aiohttp
 from kubernetes import client, config
 from kubernetes.client.rest import ApiException
+
+from resources import (
+    MANAGED_BY_LABEL,
+    build_limit_range,
+    build_network_policy_allow_ingress_controller,
+    build_network_policy_allow_prometheus,
+    build_network_policy_allow_same_ns,
+    build_network_policy_deny_ingress,
+    build_resource_quota,
+    build_role_binding,
+    build_service_account,
+    sanitize_label_value,
+)
 
 # Configure logging
 logging.basicConfig(
@@ -38,7 +49,9 @@ class TeamsOperator:
             logger.info("Loaded local kubeconfig")
         
         self.k8s_core_v1 = client.CoreV1Api()
-        
+        self.k8s_networking_v1 = client.NetworkingV1Api()
+        self.k8s_rbac_v1 = client.RbacAuthorizationV1Api()
+
     def sanitize_namespace_name(self, team_name: str) -> str:
         """Convert team name to valid Kubernetes namespace name"""
         # Lowercase, replace spaces/special chars with hyphens, remove consecutive hyphens
@@ -49,12 +62,13 @@ class TeamsOperator:
         # Ensure it starts and ends with alphanumeric
         namespace = namespace.strip('-')
         
-        # Kubernetes namespace names must be <= 63 characters
-        if len(namespace) > 63:
-            namespace = namespace[:63].rstrip('-')
-            
-        # Add prefix to avoid conflicts
-        namespace = f"team-{namespace}"
+        # Add prefix to avoid conflicts; total must be <= 63 characters
+        prefix = "team-"
+        max_base = 63 - len(prefix)
+        if len(namespace) > max_base:
+            namespace = namespace[:max_base].rstrip('-')
+
+        namespace = f"{prefix}{namespace}"
         
         return namespace
     
@@ -79,33 +93,48 @@ class TeamsOperator:
     
     def create_namespace(self, team_id: str, team_name: str, namespace_name: str) -> bool:
         """Create a Kubernetes namespace for the team"""
+        labels = {
+            "admission": "true",
+            "app.kubernetes.io/managed-by": MANAGED_BY_LABEL,
+            "teams.example.com/team-id": team_id,
+            "teams.example.com/team-name": sanitize_label_value(team_name),
+        }
+        annotations = {
+            "teams.example.com/original-team-name": team_name,
+            "teams.example.com/created-by": MANAGED_BY_LABEL,
+            "teams.example.com/team-id": team_id,
+        }
         try:
-            # Define namespace metadata
             namespace_body = client.V1Namespace(
                 metadata=client.V1ObjectMeta(
                     name=namespace_name,
-                    labels={
-                        "app.kubernetes.io/managed-by": "teams-operator",
-                        "teams.example.com/team-id": team_id,
-                        "teams.example.com/team-name": team_name.replace(" ", "-").lower()
-                    },
-                    annotations={
-                        "teams.example.com/original-team-name": team_name,
-                        "teams.example.com/created-by": "teams-operator",
-                        "teams.example.com/team-id": team_id
-                    }
+                    labels=labels,
+                    annotations=annotations,
                 )
             )
-            
+
             # Create the namespace
             self.k8s_core_v1.create_namespace(body=namespace_body)
             logger.info(f"✅ Created namespace '{namespace_name}' for team '{team_name}' (ID: {team_id})")
             return True
-            
+
         except ApiException as e:
-            if e.status == 409:  # Namespace already exists
-                logger.warning(f"⚠️ Namespace '{namespace_name}' already exists")
-                return True
+            if e.status == 409:  # Namespace already exists — converge labels
+                logger.warning(f"⚠️ Namespace '{namespace_name}' already exists, patching labels")
+                try:
+                    patch_body = client.V1Namespace(
+                        metadata=client.V1ObjectMeta(
+                            labels=labels,
+                            annotations=annotations,
+                        )
+                    )
+                    self.k8s_core_v1.patch_namespace(namespace_name, patch_body)
+                    return True
+                except Exception as patch_err:
+                    logger.error(
+                        f"❌ Failed to patch namespace '{namespace_name}' labels: {patch_err}"
+                    )
+                    return False
             else:
                 logger.error(f"❌ Failed to create namespace '{namespace_name}': {e}")
                 return False
@@ -130,6 +159,95 @@ class TeamsOperator:
             logger.error(f"❌ Unexpected error deleting namespace: {e}")
             return False
     
+    def _apply_core_resource(
+        self,
+        resource_name: str,
+        namespace_name: str,
+        create_fn,
+        patch_fn,
+    ) -> bool:
+        """Idempotent create-or-patch for a single resource."""
+        try:
+            create_fn()
+            logger.info(f"  ✅ Created {resource_name} in '{namespace_name}'")
+            return True
+        except ApiException as e:
+            if e.status == 409:
+                try:
+                    patch_fn()
+                    logger.info(f"  🔄 Patched existing {resource_name} in '{namespace_name}'")
+                    return True
+                except Exception as patch_err:
+                    logger.error(
+                        f"  ❌ Failed to patch {resource_name} in '{namespace_name}': {patch_err}"
+                    )
+                    return False
+            else:
+                logger.error(
+                    f"  ❌ Failed to create {resource_name} in '{namespace_name}': {e}"
+                )
+                return False
+        except Exception as e:
+            logger.error(
+                f"  ❌ Unexpected error applying {resource_name} in '{namespace_name}': {e}"
+            )
+            return False
+
+    def provision_namespace_resources(
+        self, team_id: str, team_name: str, namespace_name: str
+    ) -> None:
+        """Apply all enrichment resources to a team namespace."""
+        logger.info(f"🔧 Provisioning enrichment resources for '{namespace_name}'")
+
+        # --- ResourceQuota ---
+        quota = build_resource_quota(namespace_name, team_id, team_name)
+        self._apply_core_resource(
+            "ResourceQuota", namespace_name,
+            lambda: self.k8s_core_v1.create_namespaced_resource_quota(namespace_name, quota),
+            lambda: self.k8s_core_v1.patch_namespaced_resource_quota("team-quota", namespace_name, quota),
+        )
+
+        # --- LimitRange ---
+        lr = build_limit_range(namespace_name, team_id, team_name)
+        self._apply_core_resource(
+            "LimitRange", namespace_name,
+            lambda: self.k8s_core_v1.create_namespaced_limit_range(namespace_name, lr),
+            lambda: self.k8s_core_v1.patch_namespaced_limit_range("team-limits", namespace_name, lr),
+        )
+
+        # --- NetworkPolicies ---
+        netpol_builders = [
+            ("deny-all-ingress", build_network_policy_deny_ingress),
+            ("allow-same-namespace", build_network_policy_allow_same_ns),
+            ("allow-prometheus-scrape", build_network_policy_allow_prometheus),
+            ("allow-ingress-controller", build_network_policy_allow_ingress_controller),
+        ]
+        for np_name, builder in netpol_builders:
+            body = builder(namespace_name, team_id, team_name)
+            self._apply_core_resource(
+                f"NetworkPolicy/{np_name}", namespace_name,
+                lambda b=body: self.k8s_networking_v1.create_namespaced_network_policy(namespace_name, b),
+                lambda b=body: self.k8s_networking_v1.patch_namespaced_network_policy(np_name, namespace_name, b),
+            )
+
+        # --- ServiceAccount ---
+        sa = build_service_account(namespace_name, team_id, team_name)
+        self._apply_core_resource(
+            "ServiceAccount/team-deployer", namespace_name,
+            lambda: self.k8s_core_v1.create_namespaced_service_account(namespace_name, sa),
+            lambda: self.k8s_core_v1.patch_namespaced_service_account("team-deployer", namespace_name, sa),
+        )
+
+        # --- RoleBinding ---
+        rb = build_role_binding(namespace_name, team_id, team_name)
+        self._apply_core_resource(
+            "RoleBinding/team-edit-binding", namespace_name,
+            lambda: self.k8s_rbac_v1.create_namespaced_role_binding(namespace_name, rb),
+            lambda: self.k8s_rbac_v1.patch_namespaced_role_binding("team-edit-binding", namespace_name, rb),
+        )
+
+        logger.info(f"🔧 Enrichment provisioning complete for '{namespace_name}'")
+
     async def reconcile_teams(self):
         """Main reconciliation loop - sync teams with namespaces"""
         teams = await self.fetch_teams()
@@ -144,6 +262,7 @@ class TeamsOperator:
             namespace_name = self.sanitize_namespace_name(team_name)
             
             if self.create_namespace(team_id, team_name, namespace_name):
+                self.provision_namespace_resources(team_id, team_name, namespace_name)
                 self.team_namespaces[team_id] = namespace_name
         
         # Handle deleted teams (remove namespaces)

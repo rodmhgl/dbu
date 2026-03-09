@@ -1,3 +1,5 @@
 .env
 .worktrees/
 teams-management/cli/.venv/
+teams-management/teams-operator/.venv/
+teams-management/teams-operator/__pycache__/
