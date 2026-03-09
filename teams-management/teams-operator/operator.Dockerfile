@@ -13,7 +13,7 @@ COPY operator-requirements.txt .
 RUN pip install --no-cache-dir -r operator-requirements.txt
 
 # Copy operator code
-COPY teams_operator.py .
+COPY teams_operator.py resources.py ./
 
 # Change ownership to non-root user
 RUN chown -R teamsop:teamsop /app
