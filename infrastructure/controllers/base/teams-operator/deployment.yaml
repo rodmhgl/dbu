@@ -23,7 +23,7 @@ spec:
           value: "30"
         - name: TEAMS_API_URL
           value: "http://teams-api-service.engineering-platform.svc.cluster.local:8000"
-        image: olivercodes01/teams-operator:0.1.0
+        image: ghcr.io/rodmhgl/teams-operator:1.0.0
         livenessProbe:
           exec:
             command:
