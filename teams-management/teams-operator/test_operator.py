@@ -58,6 +58,14 @@ class TestApplyCoreResource(unittest.TestCase):
         self.assertFalse(result)
         patch_fn.assert_not_called()
 
+    def test_unexpected_exception_returns_false(self):
+        op = self._make_operator()
+        create_fn = MagicMock(side_effect=ValueError("bad serialization"))
+        patch_fn = MagicMock()
+        result = op._apply_core_resource("TestResource", "ns", create_fn, patch_fn)
+        self.assertFalse(result)
+        patch_fn.assert_not_called()
+
 
 class TestProvisionNamespaceResources(unittest.TestCase):
     """Tests for TeamsOperator.provision_namespace_resources()."""

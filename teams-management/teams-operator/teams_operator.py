@@ -171,6 +171,11 @@ class TeamsOperator:
                     f"  ❌ Failed to create {resource_name} in '{namespace_name}': {e}"
                 )
                 return False
+        except Exception as e:
+            logger.error(
+                f"  ❌ Unexpected error applying {resource_name} in '{namespace_name}': {e}"
+            )
+            return False
 
     def provision_namespace_resources(
         self, team_id: str, team_name: str, namespace_name: str
