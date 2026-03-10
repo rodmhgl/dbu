@@ -3,7 +3,7 @@
 ## Metadata
 
 | Field | Value |
-|-------|-------|
+| ------- | ------- |
 | **PRD ID** | PRD-001 |
 | **Title** | Developer Self-Service & Golden Paths |
 | **Priority** | P0 — Critical |
@@ -112,7 +112,7 @@ A new API endpoint and CLI command that generates starter manifests for a new se
 
 #### API Endpoint
 
-```
+```text
 POST /teams/{team_id}/workloads
 Body: { "name": "my-service", "type": "web" | "worker" | "cronjob", "port": 8080 }
 Response: { "manifests": [...], "branch": "scaffold/my-service", "pr_url": "..." }
@@ -128,7 +128,7 @@ teams-cli scaffold --team <team-id> --name my-service --type web --port 8080
 
 Outputs Kustomization-structured files:
 
-```
+```text
 my-service/
 ├── kustomization.yaml
 ├── deployment.yaml
@@ -191,7 +191,7 @@ The operator must handle re-provisioning gracefully. If a namespace already exis
 ## 8. Risks & Mitigations
 
 | Risk | Likelihood | Impact | Mitigation |
-|------|-----------|--------|------------|
+| ------ | ----------- | -------- | ------------ |
 | Operator reconciliation time makes demo feel slow | Medium | Medium | Reduce `POLL_INTERVAL` to 10s during demos; add a manual trigger endpoint |
 | ResourceQuota values too restrictive for demo workloads | Low | Medium | Use generous defaults; document how to customize |
 | Scaffolded manifests drift from Gatekeeper policies | Medium | High | Add a CI validation step that renders templates and runs `gator test` against them |

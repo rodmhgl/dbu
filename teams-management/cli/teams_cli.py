@@ -89,17 +89,38 @@ class TeamsAPI:
         result = self._make_request("DELETE", f"/teams/{team_id}")
         print(f"✅ {result['message']}")
 
+    def scaffold_workload(self, team_id: str, name: str, workload_type: str, port: int = 8080):
+        """Scaffold a workload for a team"""
+        result = self._make_request(
+            "POST",
+            f"/teams/{team_id}/workloads",
+            {"name": name, "type": workload_type, "port": port},
+        )
+        print(f"✅ Scaffolded workload: {result['workload_name']} ({result['workload_type']})")
+        print(f"📂 Namespace: {result['namespace']}")
+        print(f"🌿 Branch: {result['branch']}")
+        print(f"📋 Manifests generated: {len(result['manifests'])}")
+        for manifest in result["manifests"]:
+            print(f"   - {manifest['filename']}")
+        if result.get("pr_url"):
+            print(f"🔗 PR: {result['pr_url']}")
+        else:
+            print("ℹ️  No PR created (GitHub integration not configured)")
+
 def main():
     parser = argparse.ArgumentParser(
         description="Teams CLI - Manage teams via the Teams API",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  teams-cli health                    # Check API health
-  teams-cli create "Backend Team"     # Create a new team
-  teams-cli list                      # List all teams
-  teams-cli get <team-id>            # Get specific team
-  teams-cli delete <team-id>         # Delete a team
+  teams-cli health                                              # Check API health
+  teams-cli create "Backend Team"                               # Create a new team
+  teams-cli list                                                # List all teams
+  teams-cli get <team-id>                                       # Get specific team
+  teams-cli delete <team-id>                                    # Delete a team
+  teams-cli scaffold --team <id> --name checkout --type web     # Scaffold a web workload
+  teams-cli scaffold --team <id> --name worker --type worker    # Scaffold a worker
+  teams-cli scaffold --team <id> --name cron --type cronjob     # Scaffold a cronjob
         """
     )
     
@@ -128,6 +149,20 @@ Examples:
     # Delete command
     delete_parser = subparsers.add_parser("delete", help="Delete a team")
     delete_parser.add_argument("team_id", help="Team ID")
+
+    # Scaffold command
+    scaffold_parser = subparsers.add_parser("scaffold", help="Scaffold a workload for a team")
+    scaffold_parser.add_argument("--team", required=True, help="Team ID")
+    scaffold_parser.add_argument("--name", required=True, help="Workload name")
+    scaffold_parser.add_argument(
+        "--type",
+        required=True,
+        choices=["web", "worker", "cronjob"],
+        help="Workload type",
+    )
+    scaffold_parser.add_argument(
+        "--port", type=int, default=8080, help="Service port (default: 8080)"
+    )
     
     args = parser.parse_args()
     
@@ -150,6 +185,8 @@ Examples:
             api.get_team(args.team_id)
         elif args.command == "delete":
             api.delete_team(args.team_id)
+        elif args.command == "scaffold":
+            api.scaffold_workload(args.team, args.name, args.type, args.port)
     except KeyboardInterrupt:
         print("\n👋 Goodbye!")
         sys.exit(0)

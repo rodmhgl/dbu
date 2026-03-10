@@ -3,3 +3,5 @@
 teams-management/cli/.venv/
 teams-management/teams-operator/.venv/
 teams-management/teams-operator/__pycache__/
+teams-management/teams-api/.venv/
+teams-management/teams-api/__pycache__/
