@@ -31,7 +31,7 @@ spec:
           type: RuntimeDefault
       containers:
       - name: teams-api
-        image: ghcr.io/rodmhgl/teams-api:1.1.1
+        image: ghcr.io/rodmhgl/teams-api:1.2.0
         ports:
         - containerPort: 8000
         env:
