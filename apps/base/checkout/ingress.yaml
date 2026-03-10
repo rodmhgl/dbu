@@ -1,0 +1,28 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: websecure
+    traefik.ingress.kubernetes.io/router.tls: 'true'
+  labels:
+    app.kubernetes.io/managed-by: teams-scaffolder
+    app.kubernetes.io/name: checkout
+    app.kubernetes.io/part-of: finance
+  name: checkout
+spec:
+  ingressClassName: traefik
+  rules:
+  - host: checkout.kube-playground.io
+    http:
+      paths:
+      - backend:
+          service:
+            name: checkout
+            port:
+              number: 8080
+        path: /
+        pathType: Prefix
+  tls:
+  - hosts:
+    - checkout.kube-playground.io
+    secretName: star-kube-playground-io-tls
