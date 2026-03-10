@@ -39,7 +39,8 @@ class TeamsAPI:
                 error_detail = response.json().get("detail", "Bad request")
                 print(f"❌ Error: {error_detail}")
             elif response.status_code == 404:
-                print("❌ Error: Team not found")
+                error_detail = response.json().get("detail", "Not found")
+                print(f"❌ Error: {error_detail}")
             else:
                 print(f"❌ HTTP Error {response.status_code}: {e}")
             sys.exit(1)
