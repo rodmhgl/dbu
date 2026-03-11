@@ -1,0 +1,23 @@
+# {{WORKLOAD_NAME}}
+
+FastAPI web application scaffolded by the Teams API.
+
+## Development
+
+```bash
+pip install -r requirements.txt
+uvicorn src.main:app --reload --port {{PORT}}
+```
+
+## Testing
+
+```bash
+pytest tests/
+```
+
+## Docker
+
+```bash
+docker build -t {{WORKLOAD_NAME}} .
+docker run -p {{PORT}}:{{PORT}} {{WORKLOAD_NAME}}
+```

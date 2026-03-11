@@ -21,7 +21,13 @@ class WorkloadType(str, Enum):
     worker = "worker"
 
 
+class Language(str, Enum):
+    go = "go"
+    python = "python"
+
+
 class WorkloadCreate(BaseModel):
+    language: Optional[Language] = None
     name: str
     port: Optional[int] = 8080
     type: WorkloadType
@@ -33,6 +39,7 @@ class WorkloadManifest(BaseModel):
 
 
 class WorkloadScaffoldResponse(BaseModel):
+    app_repo_url: Optional[str] = None
     branch: str
     manifests: List[WorkloadManifest]
     namespace: str
@@ -133,11 +140,13 @@ def build_deployment(
     team_name: str,
     workload_type: WorkloadType,
     port: int = 8080,
+    image_registry: Optional[str] = None,
 ) -> dict:
     labels = _workload_labels(workload_name, team_name)
+    registry = image_registry or "REPLACE_ME"
 
     container: dict = {
-        "image": f"REPLACE_ME/{workload_name}:latest",
+        "image": f"{registry}/{workload_name}:latest",
         "name": workload_name,
         "resources": _resource_requirements(),
         "securityContext": _container_security_context(),
@@ -268,8 +277,10 @@ def build_cronjob(
     workload_name: str,
     team_name: str,
     schedule: str = "*/15 * * * *",
+    image_registry: Optional[str] = None,
 ) -> dict:
     labels = _workload_labels(workload_name, team_name)
+    registry = image_registry or "REPLACE_ME"
 
     return {
         "apiVersion": "batch/v1",
@@ -288,7 +299,7 @@ def build_cronjob(
                         "spec": {
                             "containers": [
                                 {
-                                    "image": f"REPLACE_ME/{workload_name}:latest",
+                                    "image": f"{registry}/{workload_name}:latest",
                                     "name": workload_name,
                                     "resources": _resource_requirements(),
                                     "securityContext": _container_security_context(),
@@ -331,6 +342,7 @@ def generate_workload_manifests(
     team_name: str,
     workload_type: WorkloadType,
     port: int = 8080,
+    image_registry: Optional[str] = None,
 ) -> List[WorkloadManifest]:
     manifests: List[WorkloadManifest] = []
 
@@ -338,7 +350,7 @@ def generate_workload_manifests(
         manifests.append(
             WorkloadManifest(
                 filename="deployment.yaml",
-                content=build_deployment(workload_name, team_name, workload_type, port),
+                content=build_deployment(workload_name, team_name, workload_type, port, image_registry),
             )
         )
         manifests.append(
@@ -357,14 +369,14 @@ def generate_workload_manifests(
         manifests.append(
             WorkloadManifest(
                 filename="deployment.yaml",
-                content=build_deployment(workload_name, team_name, workload_type, port),
+                content=build_deployment(workload_name, team_name, workload_type, port, image_registry),
             )
         )
     elif workload_type == WorkloadType.cronjob:
         manifests.append(
             WorkloadManifest(
                 filename="cronjob.yaml",
-                content=build_cronjob(workload_name, team_name),
+                content=build_cronjob(workload_name, team_name, image_registry=image_registry),
             )
         )
 

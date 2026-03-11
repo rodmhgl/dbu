@@ -1,0 +1,17 @@
+"""{{WORKLOAD_NAME}} — scheduled job."""
+
+import sys
+
+
+def main():
+    print(f"{{WORKLOAD_NAME}}: job started")
+    # TODO: Add your job logic here
+    print(f"{{WORKLOAD_NAME}}: job completed")
+
+
+if __name__ == "__main__":
+    try:
+        main()
+    except Exception as exc:
+        print(f"{{WORKLOAD_NAME}}: job failed — {exc}", file=sys.stderr)
+        sys.exit(1)

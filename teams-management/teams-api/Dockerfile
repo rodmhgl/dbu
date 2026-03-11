@@ -13,7 +13,8 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy application code
-COPY builders.py github_client.py main.py ./
+COPY app_scaffolder.py builders.py github_client.py main.py ./
+COPY templates/ ./templates/
 
 # Change ownership to non-root user
 RUN chown -R appuser:appuser /app

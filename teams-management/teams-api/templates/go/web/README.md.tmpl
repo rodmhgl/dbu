@@ -1,0 +1,22 @@
+# {{WORKLOAD_NAME}}
+
+Go web application scaffolded by the Teams API.
+
+## Development
+
+```bash
+make run
+```
+
+## Testing
+
+```bash
+make test
+```
+
+## Docker
+
+```bash
+docker build -t {{WORKLOAD_NAME}} .
+docker run -p {{PORT}}:{{PORT}} {{WORKLOAD_NAME}}
+```

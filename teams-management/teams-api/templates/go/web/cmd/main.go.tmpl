@@ -1,0 +1,21 @@
+package main
+
+import (
+	"fmt"
+	"log"
+	"net/http"
+
+	"github.com/{{GITHUB_OWNER}}/{{WORKLOAD_NAME}}/internal/handler"
+)
+
+func main() {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/", handler.Root)
+	mux.HandleFunc("/health", handler.Health)
+
+	addr := fmt.Sprintf(":%d", {{PORT}})
+	log.Printf("{{WORKLOAD_NAME}} listening on %s", addr)
+	if err := http.ListenAndServe(addr, mux); err != nil {
+		log.Fatalf("server error: %v", err)
+	}
+}

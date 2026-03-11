@@ -1,0 +1,30 @@
+"""{{WORKLOAD_NAME}} — long-running worker process."""
+
+import signal
+import sys
+import time
+from pathlib import Path
+
+HEALTH_FILE = Path("/tmp/healthy")
+RUNNING = True
+
+
+def shutdown_handler(signum, frame):
+    global RUNNING
+    RUNNING = False
+    HEALTH_FILE.unlink(missing_ok=True)
+    sys.exit(0)
+
+
+def main():
+    signal.signal(signal.SIGTERM, shutdown_handler)
+    signal.signal(signal.SIGINT, shutdown_handler)
+
+    while RUNNING:
+        HEALTH_FILE.touch()
+        # TODO: Add your worker logic here
+        time.sleep(10)
+
+
+if __name__ == "__main__":
+    main()

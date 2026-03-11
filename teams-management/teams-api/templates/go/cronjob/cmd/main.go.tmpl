@@ -1,0 +1,16 @@
+package main
+
+import (
+	"fmt"
+	"log"
+	"os"
+)
+
+func main() {
+	log.Printf("{{WORKLOAD_NAME}}: job started")
+
+	// TODO: Add your job logic here
+
+	log.Printf("{{WORKLOAD_NAME}}: job completed")
+	fmt.Fprintf(os.Stdout, "done\n")
+}

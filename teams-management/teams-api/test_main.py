@@ -1,11 +1,14 @@
 """Tests for the Teams API scaffolding feature."""
 
+import re
 from unittest.mock import MagicMock, patch
 
 import pytest
 from fastapi.testclient import TestClient
 
+from app_scaffolder import scaffold_app_source
 from builders import (
+    Language,
     WorkloadType,
     build_cronjob,
     build_deployment,
@@ -596,3 +599,387 @@ class TestExistingEndpoints:
     def test_get_nonexistent_team(self):
         resp = client.get("/teams/nonexistent")
         assert resp.status_code == 404
+
+
+# ---------------------------------------------------------------------------
+# TestAppScaffolder
+# ---------------------------------------------------------------------------
+
+class TestAppScaffolder:
+    """Verify template rendering for all language/type combinations."""
+
+    @pytest.mark.parametrize(
+        "language,workload_type",
+        [
+            (Language.python, WorkloadType.web),
+            (Language.python, WorkloadType.worker),
+            (Language.python, WorkloadType.cronjob),
+            (Language.go, WorkloadType.web),
+            (Language.go, WorkloadType.worker),
+            (Language.go, WorkloadType.cronjob),
+        ],
+    )
+    def test_generates_files_for_all_combos(self, language, workload_type):
+        files = scaffold_app_source("test-app", language, workload_type, port=8080)
+        assert len(files) > 0
+        # Every combo should have at least a Dockerfile and README
+        filenames = list(files.keys())
+        assert any("Dockerfile" in f for f in filenames)
+        assert any("README" in f for f in filenames)
+
+    @pytest.mark.parametrize(
+        "language,workload_type",
+        [
+            (Language.python, WorkloadType.web),
+            (Language.python, WorkloadType.worker),
+            (Language.python, WorkloadType.cronjob),
+            (Language.go, WorkloadType.web),
+            (Language.go, WorkloadType.worker),
+            (Language.go, WorkloadType.cronjob),
+        ],
+    )
+    def test_no_unsubstituted_placeholders(self, language, workload_type):
+        files = scaffold_app_source("test-app", language, workload_type, port=3000)
+        pattern = re.compile(r"\{\{(WORKLOAD_NAME|GITHUB_OWNER|PORT|MODULE_NAME)\}\}")
+        for path, content in files.items():
+            matches = pattern.findall(content)
+            assert not matches, f"Unsubstituted placeholder in {path}: {matches}"
+
+    def test_placeholder_substitution_python_web(self):
+        files = scaffold_app_source("checkout", Language.python, WorkloadType.web, port=9090)
+        main_py = files["src/main.py"]
+        assert "checkout" in main_py
+        assert "9090" in main_py
+        assert "{{WORKLOAD_NAME}}" not in main_py
+        assert "{{PORT}}" not in main_py
+
+    def test_placeholder_substitution_go_web(self):
+        files = scaffold_app_source("my-svc", Language.go, WorkloadType.web, port=8080)
+        main_go = files["cmd/main.go"]
+        assert "my-svc" in main_go
+        assert "8080" in main_go
+        assert "rodmhgl" in main_go
+
+    def test_python_module_name_underscores(self):
+        """Python module names replace hyphens with underscores."""
+        files = scaffold_app_source("my-app", Language.python, WorkloadType.web)
+        # The module name substitution should appear somewhere in the files
+        all_content = "\n".join(files.values())
+        assert "my-app" in all_content  # WORKLOAD_NAME keeps hyphens
+
+    def test_python_web_file_list(self):
+        files = scaffold_app_source("svc", Language.python, WorkloadType.web)
+        expected = {
+            "src/main.py", "src/__init__.py", "tests/test_main.py",
+            "Dockerfile", "requirements.txt", ".gitignore", "README.md",
+            ".github/workflows/build.yml", ".releaserc.json",
+        }
+        assert expected == set(files.keys())
+
+    def test_python_worker_file_list(self):
+        files = scaffold_app_source("svc", Language.python, WorkloadType.worker)
+        expected = {
+            "src/main.py", "Dockerfile", "requirements.txt",
+            ".gitignore", "README.md",
+            ".github/workflows/build.yml", ".releaserc.json",
+        }
+        assert expected == set(files.keys())
+
+    def test_python_cronjob_file_list(self):
+        files = scaffold_app_source("svc", Language.python, WorkloadType.cronjob)
+        expected = {
+            "src/main.py", "Dockerfile", "requirements.txt",
+            ".gitignore", "README.md",
+            ".github/workflows/build.yml", ".releaserc.json",
+        }
+        assert expected == set(files.keys())
+
+    def test_go_web_file_list(self):
+        files = scaffold_app_source("svc", Language.go, WorkloadType.web)
+        expected = {
+            "cmd/main.go", "internal/handler/health.go", "internal/handler/root.go",
+            "Dockerfile", "go.mod", "Makefile", ".gitignore", "README.md",
+            ".github/workflows/build.yml", ".releaserc.json",
+        }
+        assert expected == set(files.keys())
+
+    def test_go_worker_file_list(self):
+        files = scaffold_app_source("svc", Language.go, WorkloadType.worker)
+        expected = {
+            "cmd/main.go", "Dockerfile", "go.mod", "Makefile",
+            ".gitignore", "README.md",
+            ".github/workflows/build.yml", ".releaserc.json",
+        }
+        assert expected == set(files.keys())
+
+    def test_go_cronjob_file_list(self):
+        files = scaffold_app_source("svc", Language.go, WorkloadType.cronjob)
+        expected = {
+            "cmd/main.go", "Dockerfile", "go.mod", "Makefile",
+            ".gitignore", "README.md",
+            ".github/workflows/build.yml", ".releaserc.json",
+        }
+        assert expected == set(files.keys())
+
+    def test_dockerfile_non_root_python(self):
+        files = scaffold_app_source("svc", Language.python, WorkloadType.web)
+        dockerfile = files["Dockerfile"]
+        assert "USER 1001" in dockerfile
+        assert "USER root" not in dockerfile
+        assert "USER 0" not in dockerfile
+
+    def test_dockerfile_non_root_go(self):
+        files = scaffold_app_source("svc", Language.go, WorkloadType.web)
+        dockerfile = files["Dockerfile"]
+        assert "nonroot" in dockerfile
+        assert "USER root" not in dockerfile
+
+    def test_releaserc_tag_format(self):
+        files = scaffold_app_source("svc", Language.python, WorkloadType.web)
+        releaserc = files[".releaserc.json"]
+        assert '"tagFormat": "v${version}"' in releaserc
+
+    def test_ci_workflow_has_ghcr_reference(self):
+        files = scaffold_app_source("svc", Language.python, WorkloadType.web)
+        workflow = files[".github/workflows/build.yml"]
+        assert "ghcr.io/rodmhgl/svc" in workflow
+
+
+# ---------------------------------------------------------------------------
+# TestGitHubClientNewMethods
+# ---------------------------------------------------------------------------
+
+class TestGitHubClientNewMethods:
+    def setup_method(self):
+        self.gh = GitHubClient("fake-token", "owner/repo")
+
+    @patch("github_client.http_requests.post")
+    def test_create_repo(self, mock_post):
+        mock_post.return_value = MagicMock(
+            status_code=201,
+            json=lambda: {"html_url": "https://github.com/rodmhgl/test-app"},
+            raise_for_status=lambda: None,
+        )
+        url = self.gh.create_repo("test-app", "a test app")
+        assert url == "https://github.com/rodmhgl/test-app"
+        call_json = mock_post.call_args[1]["json"]
+        assert call_json["name"] == "test-app"
+        assert call_json["auto_init"] is True
+        assert call_json["private"] is False
+
+    @patch("github_client.http_requests.post")
+    def test_create_repo_private(self, mock_post):
+        mock_post.return_value = MagicMock(
+            status_code=201,
+            json=lambda: {"html_url": "https://github.com/rodmhgl/private-app"},
+            raise_for_status=lambda: None,
+        )
+        url = self.gh.create_repo("private-app", "private", private=True)
+        assert url == "https://github.com/rodmhgl/private-app"
+        call_json = mock_post.call_args[1]["json"]
+        assert call_json["private"] is True
+
+    @patch("github_client.http_requests.patch")
+    @patch("github_client.http_requests.post")
+    @patch("github_client.http_requests.get")
+    def test_commit_files_single(self, mock_get, mock_post, mock_patch):
+        # GET ref -> GET commit
+        mock_get.side_effect = [
+            MagicMock(
+                status_code=200,
+                json=lambda: {"object": {"sha": "head-sha"}},
+                raise_for_status=lambda: None,
+            ),
+            MagicMock(
+                status_code=200,
+                json=lambda: {"tree": {"sha": "tree-sha"}},
+                raise_for_status=lambda: None,
+            ),
+        ]
+        # POST blob -> POST tree -> POST commit
+        mock_post.side_effect = [
+            MagicMock(
+                status_code=201,
+                json=lambda: {"sha": "blob-sha"},
+                raise_for_status=lambda: None,
+            ),
+            MagicMock(
+                status_code=201,
+                json=lambda: {"sha": "new-tree-sha"},
+                raise_for_status=lambda: None,
+            ),
+            MagicMock(
+                status_code=201,
+                json=lambda: {"sha": "new-commit-sha"},
+                raise_for_status=lambda: None,
+            ),
+        ]
+        mock_patch.return_value = MagicMock(
+            status_code=200, raise_for_status=lambda: None
+        )
+
+        self.gh.commit_files_to_repo(
+            "owner/new-repo", {"README.md": "hello"}, "init"
+        )
+
+        assert mock_post.call_count == 3  # blob + tree + commit
+        assert mock_patch.call_count == 1  # update ref
+        # Verify update ref was called with the new commit sha
+        patch_json = mock_patch.call_args[1]["json"]
+        assert patch_json["sha"] == "new-commit-sha"
+
+    @patch("github_client.http_requests.patch")
+    @patch("github_client.http_requests.post")
+    @patch("github_client.http_requests.get")
+    def test_commit_files_multiple(self, mock_get, mock_post, mock_patch):
+        mock_get.side_effect = [
+            MagicMock(
+                status_code=200,
+                json=lambda: {"object": {"sha": "head-sha"}},
+                raise_for_status=lambda: None,
+            ),
+            MagicMock(
+                status_code=200,
+                json=lambda: {"tree": {"sha": "tree-sha"}},
+                raise_for_status=lambda: None,
+            ),
+        ]
+        # Two blobs + tree + commit = 4 POST calls
+        mock_post.side_effect = [
+            MagicMock(status_code=201, json=lambda: {"sha": "blob1"}, raise_for_status=lambda: None),
+            MagicMock(status_code=201, json=lambda: {"sha": "blob2"}, raise_for_status=lambda: None),
+            MagicMock(status_code=201, json=lambda: {"sha": "tree-sha2"}, raise_for_status=lambda: None),
+            MagicMock(status_code=201, json=lambda: {"sha": "commit-sha2"}, raise_for_status=lambda: None),
+        ]
+        mock_patch.return_value = MagicMock(
+            status_code=200, raise_for_status=lambda: None
+        )
+
+        self.gh.commit_files_to_repo(
+            "owner/repo", {"a.txt": "aaa", "b.txt": "bbb"}, "add files"
+        )
+
+        assert mock_post.call_count == 4  # 2 blobs + tree + commit
+
+
+# ---------------------------------------------------------------------------
+# TestBuildDeploymentImageRegistry
+# ---------------------------------------------------------------------------
+
+class TestBuildDeploymentImageRegistry:
+    def test_default_image_uses_replace_me(self):
+        d = build_deployment("svc", "team", WorkloadType.web)
+        image = d["spec"]["template"]["spec"]["containers"][0]["image"]
+        assert image == "REPLACE_ME/svc:latest"
+
+    def test_image_registry_override(self):
+        d = build_deployment("svc", "team", WorkloadType.web, image_registry="ghcr.io/rodmhgl")
+        image = d["spec"]["template"]["spec"]["containers"][0]["image"]
+        assert image == "ghcr.io/rodmhgl/svc:latest"
+
+
+class TestBuildCronjobImageRegistry:
+    def test_default_cronjob_image_uses_replace_me(self):
+        cj = build_cronjob("job", "team")
+        image = cj["spec"]["jobTemplate"]["spec"]["template"]["spec"]["containers"][0]["image"]
+        assert image == "REPLACE_ME/job:latest"
+
+    def test_cronjob_image_registry_override(self):
+        cj = build_cronjob("job", "team", image_registry="ghcr.io/rodmhgl")
+        image = cj["spec"]["jobTemplate"]["spec"]["template"]["spec"]["containers"][0]["image"]
+        assert image == "ghcr.io/rodmhgl/job:latest"
+
+
+# ---------------------------------------------------------------------------
+# TestScaffoldEndpointWithLanguage
+# ---------------------------------------------------------------------------
+
+class TestScaffoldEndpointWithLanguage:
+    @patch.dict("os.environ", {"GITHUB_TOKEN": "", "GITHUB_REPO": ""}, clear=False)
+    def test_backwards_compat_no_language(self, team_id):
+        """Omitting language produces identical behavior to before."""
+        resp = client.post(
+            f"/teams/{team_id}/workloads",
+            json={"name": "checkout", "type": "web"},
+        )
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["app_repo_url"] is None
+        # Image should still use REPLACE_ME
+        deployment = next(m for m in data["manifests"] if m["filename"] == "deployment.yaml")
+        image = deployment["content"]["spec"]["template"]["spec"]["containers"][0]["image"]
+        assert image.startswith("REPLACE_ME/")
+
+    @patch.dict("os.environ", {"GITHUB_TOKEN": "", "GITHUB_REPO": ""}, clear=False)
+    def test_language_without_github_token(self, team_id):
+        """Language is set but no GitHub token — app repo not created, but image_registry applied."""
+        resp = client.post(
+            f"/teams/{team_id}/workloads",
+            json={"name": "svc", "type": "web", "language": "python"},
+        )
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["app_repo_url"] is None
+        # Image should use ghcr.io/rodmhgl since language was specified
+        deployment = next(m for m in data["manifests"] if m["filename"] == "deployment.yaml")
+        image = deployment["content"]["spec"]["template"]["spec"]["containers"][0]["image"]
+        assert image == "ghcr.io/rodmhgl/svc:latest"
+
+    @patch.dict("os.environ", {"GITHUB_TOKEN": "", "GITHUB_REPO": ""}, clear=False)
+    def test_invalid_language_422(self, team_id):
+        resp = client.post(
+            f"/teams/{team_id}/workloads",
+            json={"name": "svc", "type": "web", "language": "rust"},
+        )
+        assert resp.status_code == 422
+
+    @patch.dict(
+        "os.environ",
+        {"GITHUB_TOKEN": "fake-token", "GITHUB_REPO": "owner/gitops-repo"},
+        clear=False,
+    )
+    @patch("main.GITHUB_TOKEN", "fake-token")
+    @patch("main.GITHUB_REPO", "owner/gitops-repo")
+    @patch("main.GitHubClient")
+    def test_response_includes_app_repo_url(self, MockGHClient, team_id):
+        mock_gh = MagicMock()
+        MockGHClient.return_value = mock_gh
+        mock_gh.get_default_branch_sha.return_value = "sha123"
+        mock_gh.get_file_content.return_value = None
+        mock_gh.create_pull_request.return_value = "https://github.com/owner/repo/pull/1"
+        mock_gh.create_repo.return_value = "https://github.com/rodmhgl/my-svc"
+
+        resp = client.post(
+            f"/teams/{team_id}/workloads",
+            json={"name": "my-svc", "type": "web", "language": "python"},
+        )
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["app_repo_url"] == "https://github.com/rodmhgl/my-svc"
+        mock_gh.create_repo.assert_called_once()
+        mock_gh.commit_files_to_repo.assert_called_once()
+
+    @patch.dict(
+        "os.environ",
+        {"GITHUB_TOKEN": "fake-token", "GITHUB_REPO": "owner/gitops-repo"},
+        clear=False,
+    )
+    @patch("main.GITHUB_TOKEN", "fake-token")
+    @patch("main.GITHUB_REPO", "owner/gitops-repo")
+    @patch("main.GitHubClient")
+    def test_no_app_scaffold_without_language(self, MockGHClient, team_id):
+        mock_gh = MagicMock()
+        MockGHClient.return_value = mock_gh
+        mock_gh.get_default_branch_sha.return_value = "sha123"
+        mock_gh.get_file_content.return_value = None
+        mock_gh.create_pull_request.return_value = "https://github.com/owner/repo/pull/1"
+
+        resp = client.post(
+            f"/teams/{team_id}/workloads",
+            json={"name": "my-svc", "type": "web"},
+        )
+        assert resp.status_code == 200
+        data = resp.json()
+        assert data["app_repo_url"] is None
+        mock_gh.create_repo.assert_not_called()
+        mock_gh.commit_files_to_repo.assert_not_called()

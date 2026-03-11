@@ -1,0 +1,13 @@
+.PHONY: build run test clean
+
+build:
+	CGO_ENABLED=0 go build -ldflags="-s -w" -o bin/{{WORKLOAD_NAME}} ./cmd/...
+
+run:
+	go run ./cmd/...
+
+test:
+	go test ./...
+
+clean:
+	rm -rf bin/

@@ -1,0 +1,32 @@
+package main
+
+import (
+	"log"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
+)
+
+const healthFile = "/tmp/healthy"
+
+func main() {
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, syscall.SIGTERM, syscall.SIGINT)
+
+	log.Printf("{{WORKLOAD_NAME}} worker started")
+
+	go func() {
+		for {
+			if err := os.WriteFile(healthFile, []byte("ok"), 0644); err != nil {
+				log.Printf("warning: failed to write health file: %v", err)
+			}
+			// TODO: Add your worker logic here
+			time.Sleep(10 * time.Second)
+		}
+	}()
+
+	<-stop
+	os.Remove(healthFile)
+	log.Printf("{{WORKLOAD_NAME}} worker stopped")
+}
